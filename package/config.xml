@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" id="mediaplayer" version="0.1">
+  <name>MediaPlayer</name>
+  <icon src="icon.svg"/>
+  <content src="bin/mediaplayer" type="application/x-executable"/>
+  <description>This is a demo application for multimedia</description>
+  <author>Tasuku Suzuki &lt;tasuku.suzuki@qt.io&gt;</author>
+  <license>APL 2.0</license>
+</widget>
+
+
