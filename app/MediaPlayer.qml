@@ -33,7 +33,6 @@ ApplicationWindow {
             return Qt.formatTime(new Date(value), 'mm:ss')
         }
         onPositionChanged: slider.value = player.position
-        Component.onCompleted: console.debug('player.supportedAudioRoles()', player.supportedAudioRoles())
     }
 
     Playlist {
@@ -51,7 +50,7 @@ ApplicationWindow {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: 3
+            Layout.preferredHeight: 1080
             clip: true
             Image {
                 anchors.left: parent.left
@@ -178,7 +177,7 @@ ApplicationWindow {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: 2
+            Layout.preferredHeight: 407
             ListView {
                 anchors.fill: parent
                 clip: true
