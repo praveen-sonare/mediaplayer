@@ -27,8 +27,13 @@
 #include <libhomescreen.hpp>
 #endif
 
+#ifdef HAVE_LIGHTMEDIASCANNER
+#include "lightmediascanner.h"
+#endif
+
 #include "playlistwithmetadata.h"
 
+#ifndef HAVE_LIGHTMEDIASCANNER
 QVariantList readMusicFile(const QString &path)
 {
     QVariantList ret;
@@ -43,6 +48,7 @@ QVariantList readMusicFile(const QString &path)
     }
     return ret;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -62,9 +68,22 @@ int main(int argc, char *argv[])
     qmlRegisterType<PlaylistWithMetadata>("MediaPlayer", 1, 0, "PlaylistWithMetadata");
 
     QVariantList mediaFiles;
+    QString music;
+
+#ifdef HAVE_LIGHTMEDIASCANNER
+    LightMediaScanner scanner(QDir::homePath() + "/.config/lightmediascannerd/db.sqlite3");
+    while (scanner.next(music)) {
+        QFileInfo fileInfo(music);
+        // Possible for stale entries due to removable media
+        if (!fileInfo.exists())
+            continue;
+        mediaFiles.append(QUrl::fromLocalFile(music));
+    }
+#else
     for (const auto &music : QStandardPaths::standardLocations(QStandardPaths::MusicLocation)) {
         mediaFiles.append(readMusicFile(music));
     }
+#endif
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
