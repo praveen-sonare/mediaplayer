@@ -160,6 +160,8 @@ QVariant PlaylistWithMetadata::data(const QModelIndex &index, int role) const
     switch (role) {
     case TitleRole:
         ret = d->title.value(url);
+        if (ret.toString().isEmpty())
+            ret = QVariant(url.fileName());
         break;
     case ArtistRole:
         ret = d->artist.value(url);
