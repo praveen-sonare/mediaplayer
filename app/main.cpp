@@ -31,6 +31,10 @@
 #include "lightmediascanner.h"
 #endif
 
+#ifdef HAVE_DBUS
+#include "dbus.h"
+#endif
+
 #include "playlistwithmetadata.h"
 
 #ifndef HAVE_LIGHTMEDIASCANNER
@@ -68,18 +72,12 @@ int main(int argc, char *argv[])
     qmlRegisterType<PlaylistWithMetadata>("MediaPlayer", 1, 0, "PlaylistWithMetadata");
 
     QVariantList mediaFiles;
-    QString music;
 
 #ifdef HAVE_LIGHTMEDIASCANNER
-    LightMediaScanner scanner(QDir::homePath() + "/.config/lightmediascannerd/db.sqlite3");
-    while (scanner.next(music)) {
-        QFileInfo fileInfo(music);
-        // Possible for stale entries due to removable media
-        if (!fileInfo.exists())
-            continue;
-        mediaFiles.append(QUrl::fromLocalFile(music));
-    }
+    mediaFiles = LightMediaScanner::processLightMediaScanner();
 #else
+    QString music;
+
     for (const auto &music : QStandardPaths::standardLocations(QStandardPaths::MusicLocation)) {
         mediaFiles.append(readMusicFile(music));
     }
@@ -88,8 +86,14 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
     context->setContextProperty("mediaFiles", mediaFiles);
+
+#if defined(HAVE_DBUS) && defined(HAVE_LIGHTMEDIASCANNER)
+    DbusService dbus_service;
+    context->setContextProperty("dbus", &dbus_service);
+    if (!dbus_service.enableLMS())
+       qWarning() << "Cannot run enableLMS";
+#endif
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 
     return app.exec();
 }
-

@@ -14,27 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef LIGHTMEDIASCANNER_H
-#define LIGHTMEDIASCANNER_H
+#ifndef DBUS_H
+#define DBUS_H
 
-#include <QtCore/QDir>
-#include <QtCore/QUrl>
-#include <QtCore/QFileInfo>
 #include <QtCore/QDebug>
-#include <QtCore/QStandardPaths>
+#include <QtCore/QObject>
 #include <QtCore/QString>
-#include <QtSql/QSqlDatabase>
-#include <QtSql/QSqlRecord>
-#include <QtSql/QSqlQuery>
+#include <QtCore/QVariant>
+#include <QtCore/QVariantList>
+#include <QtDBus/QDBusPendingCall>
+#include <QtDBus/QDBusPendingReply>
+#include <QtDBus/QDBusInterface>
+#include <QtDBus/QDBusConnection>
 
-class LightMediaScanner {
+#include "lightmediascanner.h"
+
+class DbusService : public QObject {
+    Q_OBJECT
 public:
-    LightMediaScanner(const QString& path);
-    bool next(QString& item);
-    static QVariantList processLightMediaScanner();
-private:
-    QSqlDatabase lms;
-    QSqlQuery query;
+    explicit DbusService(QObject *parent = 0);
+    bool enableLMS();
+
+signals:
+    void processPlaylistUpdate(const QVariantList& mediaFiles);
+    void processPlaylistHide();
+
+private slots:
+    void lmsUpdate(const QString&, const QVariantMap&, const QStringList&);
 };
 
 #endif

@@ -16,4 +16,11 @@ packagesExist(sqlite3 lightmediascanner) {
     QT += sql
 }
 
+packagesExist(dbus-1) {
+    HEADERS += dbus.h
+    SOURCES += dbus.cpp
+    DEFINES += HAVE_DBUS
+    QT += dbus
+}
+
 DESTDIR = $${OUT_PWD}/../package/root/bin

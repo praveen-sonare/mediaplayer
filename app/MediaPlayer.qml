@@ -24,6 +24,32 @@ import MediaPlayer 1.0
 ApplicationWindow {
     id: root
 
+    function clearMetadata() {
+        title.text = ''
+        artist.text = ''
+        duration.text = player.time2str(0)
+        albumart.visible = false
+    }
+
+    Connections {
+        target: dbus
+        onProcessPlaylistUpdate: {
+            playlist.clear()
+            playlist.addItems(mediaFiles)
+
+            playlistmodel.setSource(playlist)
+            playlistview.visible = true
+            albumart.visible = true
+        }
+
+        onProcessPlaylistHide: {
+            player.stop()
+            playlistview.visible = false
+            clearMetadata()
+        }
+
+    }
+
     MediaPlayer {
         id: player
         audioRole: MediaPlayer.MusicRole
@@ -53,6 +79,7 @@ ApplicationWindow {
             Layout.preferredHeight: 1080
             clip: true
             Image {
+                id: albumart
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
@@ -178,17 +205,22 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: 407
+
+	    PlaylistWithMetadata {
+	        id: playlistmodel
+                source: playlist
+            }
+
             ListView {
                 anchors.fill: parent
+                id: playlistview
                 clip: true
                 header: Label {
                     x: 50
                     text: 'PLAYLIST'
                     opacity: 0.5
                 }
-                model: PlaylistWithMetadata {
-                    source: playlist
-                }
+                model: playlistmodel
                 currentIndex: playlist.currentIndex
 
                 delegate: MouseArea {

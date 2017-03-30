@@ -40,3 +40,18 @@ bool LightMediaScanner::next(QString& item)
 
     return true;
 }
+
+QVariantList LightMediaScanner::processLightMediaScanner()
+{
+    QVariantList mediaFiles;
+    QString music;
+    LightMediaScanner scanner(QDir::homePath() + "/.config/lightmediascannerd/db.sqlite3");
+    while (scanner.next(music)) {
+        QFileInfo fileInfo(music);
+        // Possible for stale entries due to removable media
+        if (!fileInfo.exists())
+            continue;
+        mediaFiles.append(QUrl::fromLocalFile(music));
+    }
+    return mediaFiles;
+}
