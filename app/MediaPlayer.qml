@@ -24,30 +24,63 @@ import MediaPlayer 1.0
 ApplicationWindow {
     id: root
 
-    function clearMetadata() {
-        title.text = ''
-        artist.text = ''
-        duration.text = player.time2str(0)
-        albumart.visible = false
+    Item {
+        id: bluetooth
+        property bool connected: false
+        property string state
+
+        property string artist
+        property string title
+        property int duration: 0
+        property int position: 0
+
+        function disableBluetooth() {
+            bluetooth.artist = ''
+            bluetooth.title = ''
+            bluetooth.duration = 0
+            bluetooth.position = 0
+            bluetooth.connected = false
+        }
     }
 
     Connections {
         target: dbus
+
         onProcessPlaylistUpdate: {
             playlist.clear()
             playlist.addItems(mediaFiles)
 
             playlistmodel.setSource(playlist)
-            playlistview.visible = true
-            albumart.visible = true
+            playlistview.visible = bluetooth.connected == false
         }
 
         onProcessPlaylistHide: {
-            player.stop()
             playlistview.visible = false
-            clearMetadata()
+            player.stop()
         }
 
+        onProcessPlaylistShow: {
+            playlistview.visible = true
+            bluetooth.disableBluetooth()
+        }
+
+        onDisplayBluetoothMetadata: {
+            if (avrcp_artist)
+                bluetooth.artist = avrcp_artist
+            if (avrcp_title)
+                bluetooth.title = avrcp_title
+            bluetooth.duration = avrcp_duration
+        }
+
+        onUpdatePlayerStatus: {
+            bluetooth.connected = true
+            bluetooth.state = status
+        }
+
+        onUpdatePosition: {
+            slider.value = current_position
+            bluetooth.position = current_position
+        }
     }
 
     MediaPlayer {
@@ -55,10 +88,23 @@ ApplicationWindow {
         audioRole: MediaPlayer.MusicRole
         autoLoad: true
         playlist: playlist
+
+        property bool is_bluetooth: false
         function time2str(value) {
             return Qt.formatTime(new Date(value), 'mm:ss')
         }
         onPositionChanged: slider.value = player.position
+    }
+
+    Timer {
+        id: timer
+        interval: 250
+        running: (bluetooth.connected && bluetooth.state == "playing")
+        repeat: true
+        onTriggered: {
+            bluetooth.position = dbus.getCurrentPosition()
+            slider.value = bluetooth.position
+        }
     }
 
     Playlist {
@@ -86,6 +132,7 @@ ApplicationWindow {
                 height: sourceSize.height * width / sourceSize.width
                 fillMode: Image.PreserveAspectCrop
                 source: player.metaData.coverArtImage ? player.metaData.coverArtImage : ''
+                visible: bluetooth.connected == false
             }
 
             Item {
@@ -109,11 +156,13 @@ ApplicationWindow {
                             spacing: 20
                             ToggleButton {
                                 id: random
+                                visible: bluetooth.connected == false
                                 offImage: './images/AGL_MediaPlayer_Shuffle_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Shuffle_Active.svg'
                             }
                             ToggleButton {
                                 id: loop
+                                visible: bluetooth.connected == false
                                 offImage: './images/AGL_MediaPlayer_Loop_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Loop_Active.svg'
                             }
@@ -123,14 +172,13 @@ ApplicationWindow {
                             Label {
                                 id: title
                                 Layout.alignment: Layout.Center
-                                text: player.metaData.title ? player.metaData.title : ''
+                                text: bluetooth.title ? bluetooth.title : (player.metaData.title ? player.metaData.title : '')
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                             }
                             Label {
-                                id: artist
                                 Layout.alignment: Layout.Center
-                                text: player.metaData.contributingArtist ? player.metaData.contributingArtist : ''
+                                text: bluetooth.artist ? bluetooth.artist : (player.metaData.contributingArtist ? player.metaData.contributingArtist : '')
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                                 font.pixelSize: title.font.pixelSize * 0.6
@@ -140,20 +188,27 @@ ApplicationWindow {
                     Slider {
                         id: slider
                         Layout.fillWidth: true
-                        to: player.duration
+                        to: bluetooth.connected ? bluetooth.duration : player.duration
+                        enabled: bluetooth.connected == false
+                        function getPosition() {
+                            if (bluetooth.connected && bluetooth.position) {
+                                return player.time2str(bluetooth.position)
+                            }
+                            return player.time2str(player.position)
+                        }
                         Label {
                             id: position
                             anchors.left: parent.left
                             anchors.bottom: parent.top
                             font.pixelSize: 32
-                            text: player.time2str(player.position)
+                            text: slider.getPosition()
                         }
                         Label {
                             id: duration
                             anchors.right: parent.right
                             anchors.bottom: parent.top
                             font.pixelSize: 32
-                            text: player.time2str(player.duration)
+                            text: bluetooth.connected ? player.time2str(bluetooth.duration) : player.time2str(player.duration)
                         }
                         onPressedChanged: player.seek(value)
                     }
@@ -167,13 +222,26 @@ ApplicationWindow {
 //                        }
                         Item { Layout.fillWidth: true }
                         ImageButton {
+                            id: previous
                             offImage: './images/AGL_MediaPlayer_BackArrow.svg'
-                            onClicked: playlist.previous()
+                            onClicked: {
+                                if (bluetooth.connected) {
+                                    dbus.processQMLEvent("Previous")
+                                } else {
+                                    playlist.previous()
+                                }
+                            }
                         }
                         ImageButton {
                             id: play
                             offImage: './images/AGL_MediaPlayer_Player_Play.svg'
-                            onClicked: player.play()
+                            onClicked: {
+                                if (bluetooth.connected) {
+                                    dbus.processQMLEvent("Play")
+                                } else {
+                                    player.play()
+                                }
+                            }
                             states: [
                                 State {
                                     when: player.playbackState === MediaPlayer.PlayingState
@@ -182,12 +250,28 @@ ApplicationWindow {
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
                                         onClicked: player.pause()
                                     }
+                                },
+                                State {
+                                    when: bluetooth.connected && bluetooth.state == "playing"
+                                    PropertyChanges {
+                                        target: play
+                                        offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
+                                        onClicked: dbus.processQMLEvent("Pause")
+                                    }
                                 }
+
                             ]
                         }
                         ImageButton {
+                            id: forward
                             offImage: './images/AGL_MediaPlayer_ForwardArrow.svg'
-                            onClicked: playlist.next()
+                            onClicked: {
+                                if (bluetooth.connected) {
+                                    dbus.processQMLEvent("Next")
+                                } else {
+                                    playlist.next()
+                                }
+                            }
                         }
 
                         Item { Layout.fillWidth: true }

@@ -87,11 +87,15 @@ int main(int argc, char *argv[])
     QQmlContext *context = engine.rootContext();
     context->setContextProperty("mediaFiles", mediaFiles);
 
-#if defined(HAVE_DBUS) && defined(HAVE_LIGHTMEDIASCANNER)
+#if defined(HAVE_DBUS)
     DbusService dbus_service;
     context->setContextProperty("dbus", &dbus_service);
+#if defined(HAVE_LIGHTMEDIASCANNER)
     if (!dbus_service.enableLMS())
        qWarning() << "Cannot run enableLMS";
+#endif
+    if (!dbus_service.enableBluetooth())
+       qWarning() << "Cannot run enableBluetooth";
 #endif
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 

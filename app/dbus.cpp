@@ -59,3 +59,115 @@ void DbusService::lmsUpdate(const QString&, const QVariantMap&, const QStringLis
 {
 }
 #endif
+
+/*
+ * Bluetooth
+ */
+
+void DbusService::setBluezPath(const QString& path)
+{
+    this->bluezPath = path;
+}
+
+QString DbusService::getBluezPath() const
+{
+    return this->bluezPath;
+}
+
+bool DbusService::enableBluetooth()
+{
+    QDBusConnection system_bus = QDBusConnection::systemBus();
+    QString interface = "org.freedesktop.DBus.ObjectManager";
+    bool ret;
+
+    if (!system_bus.isConnected())
+        return false;
+
+    ret = system_bus.connect(QString("org.bluez"), QString("/"), interface, "InterfacesAdded", this, SLOT(newBluetoothDevice(QDBusObjectPath,QVariantMap)));
+
+    if (!ret)
+        return false;
+
+    ret = system_bus.connect(QString("org.bluez"), QString("/"), interface, "InterfacesRemoved", this, SLOT(removeBluetoothDevice(QDBusObjectPath,QStringList)));
+
+    /*
+     * Unregister InterfacesAdded on error condition
+     */
+    if (!ret)
+        system_bus.disconnect(QString("org.bluez"), QString("/"), interface, "InterfacesAdded", this, SLOT(newBluetoothDevice(QString,QVariantMap)));
+
+    return ret;
+}
+
+bool DbusService::checkIfPlayer(const QString& path) const
+{
+    QRegExp regex("^.*/player\\d$");
+    if (regex.exactMatch(path))
+        return true;
+
+    return false;
+}
+
+void DbusService::newBluetoothDevice(const QDBusObjectPath& item, const QVariantMap&)
+{
+    QString path = item.path();
+    if (!checkIfPlayer(path))
+        return;
+
+    if (!getBluezPath().isEmpty()) {
+        qWarning() << "Another Bluetooth Player already connected";
+        return;
+    }
+
+    emit processPlaylistHide();
+
+    QDBusConnection system_bus = QDBusConnection::systemBus();
+    system_bus.connect(QString("org.bluez"), path, "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(processBluetoothEvent(QString,QVariantMap,QStringList)));
+
+    setBluezPath(path);
+}
+
+void DbusService::removeBluetoothDevice(const QDBusObjectPath& item, const QStringList&)
+{
+    QString path = item.path();
+    if (!checkIfPlayer(path))
+        return;
+
+    if (getBluezPath().isEmpty()) {
+        qWarning() << "No Bluetooth Player connected";
+        return;
+    }
+
+    QDBusConnection system_bus = QDBusConnection::systemBus();
+    system_bus.disconnect(QString("org.bluez"), path, "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(processBluetoothEvent(QString,QVariantMap,QStringList)));
+
+    setBluezPath(QString());
+    emit processPlaylistShow();
+}
+
+void DbusService::processBluetoothEvent(const QString&, const QVariantMap& map, const QStringList&)
+{
+    if (map.contains("Track")) {
+        QVariantMap track;
+        map["Track"].value<QDBusArgument>() >> track;
+        emit displayBluetoothMetadata(track["Artist"].toString(), track["Title"].toString(), track["Duration"].toInt());
+    }
+
+    if (map.contains("Position"))
+        emit updatePosition(map["Position"].toInt());
+
+    if (map.contains("Status"))
+        emit updatePlayerStatus(map["Status"].toString());
+}
+
+void DbusService::processQMLEvent(const QString& state)
+{
+    QDBusInterface interface("org.bluez", getBluezPath(), "org.bluez.MediaPlayer1", QDBusConnection::systemBus());
+    interface.call(state);
+}
+
+long DbusService::getCurrentPosition()
+{
+    QDBusInterface interface("org.bluez", getBluezPath(), "org.bluez.MediaPlayer1", QDBusConnection::systemBus());
+    return interface.property("Position").toInt();
+}
