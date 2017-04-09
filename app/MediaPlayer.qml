@@ -103,7 +103,7 @@ ApplicationWindow {
                             Label {
                                 id: artist
                                 Layout.alignment: Layout.Center
-                                text: player.metaData.author ? player.metaData.author : ''
+                                text: player.metaData.contributingArtist ? player.metaData.contributingArtist : ''
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                                 font.pixelSize: title.font.pixelSize * 0.6
