@@ -25,6 +25,7 @@
 #include <QtDBus/QDBusPendingCall>
 #include <QtDBus/QDBusPendingReply>
 #include <QtDBus/QDBusInterface>
+#include <QtDBus/QDBusReply>
 #include <QtDBus/QDBusConnection>
 
 #include "lightmediascanner.h"
@@ -43,6 +44,8 @@ private:
     void setBluezPath(const QString& path);
     QString getBluezPath() const;
     bool checkIfPlayer(const QString& path) const;
+    bool deviceConnected(const QDBusConnection& system_bus);
+    void initialBluetoothData(const QDBusConnection& system_bus);
     QString bluezPath;
 
 signals:

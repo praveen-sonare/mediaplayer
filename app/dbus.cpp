@@ -83,6 +83,9 @@ bool DbusService::enableBluetooth()
     if (!system_bus.isConnected())
         return false;
 
+    if (deviceConnected(system_bus))
+        initialBluetoothData(system_bus);
+
     ret = system_bus.connect(QString("org.bluez"), QString("/"), interface, "InterfacesAdded", this, SLOT(newBluetoothDevice(QDBusObjectPath,QVariantMap)));
 
     if (!ret)
@@ -106,6 +109,93 @@ bool DbusService::checkIfPlayer(const QString& path) const
         return true;
 
     return false;
+}
+
+bool DbusService::deviceConnected(const QDBusConnection& system_bus)
+{
+    QDBusInterface interface("org.bluez", "/", "org.freedesktop.DBus.ObjectManager", system_bus);
+    QDBusMessage result = interface.call("GetManagedObjects");
+    const QDBusArgument argument = result.arguments().at(0).value<QDBusArgument>();
+    bool ret = false;
+
+    if (argument.currentType() != QDBusArgument::MapType)
+        return false;
+
+    argument.beginMap();
+
+    while (!argument.atEnd()) {
+        QString key;
+
+        argument.beginMapEntry();
+        argument >> key;
+        argument.endMapEntry();
+
+        ret = checkIfPlayer(key);
+
+        if (ret) {
+            newBluetoothDevice(QDBusObjectPath(key), QVariantMap());
+            break;
+        }
+    }
+
+    argument.endMap();
+
+    return ret;
+}
+
+void DbusService::initialBluetoothData(const QDBusConnection& system_bus)
+{
+    QDBusInterface interface("org.bluez", getBluezPath(), "org.freedesktop.DBus.Properties", system_bus);
+
+    QDBusMessage result = interface.call("GetAll", "org.bluez.MediaPlayer1");
+    const QDBusArgument argument = result.arguments().at(0).value<QDBusArgument>();
+    QString status, artist, title;
+    int position = 0, duration = 0;
+
+    if (argument.currentType() != QDBusArgument::MapType)
+        return;
+
+    argument.beginMap();
+
+    while (!argument.atEnd()) {
+        QString key;
+        QVariant value;
+
+        argument.beginMapEntry();
+        argument >> key >> value;
+
+        if (key == "Position") {
+            position = value.toInt();
+        } else if (key == "Status") {
+            status = value.toString();
+        } else if (key == "Track") {
+            const QDBusArgument argument1 = qvariant_cast<QDBusArgument>(value);
+            QString key1;
+            QVariant value1;
+
+            argument1.beginMap();
+
+            while (!argument1.atEnd()) {
+                argument1.beginMapEntry();
+                argument1 >> key1 >> value1;
+                if (key1 == "Artist")
+                    artist = value1.toString();
+                else if (key1 == "Title")
+                    title = value1.toString();
+                else if (key1 == "Duration")
+                    duration = value1.toInt();
+                argument1.endMapEntry();
+            }
+            argument1.endMap();
+        }
+        argument.endMapEntry();
+    }
+    argument.endMap();
+
+    emit processPlaylistHide();
+    emit displayBluetoothMetadata(artist, title, duration);
+    emit updatePlayerStatus(status);
+    emit updatePosition(position);
 }
 
 void DbusService::newBluetoothDevice(const QDBusObjectPath& item, const QVariantMap&)
