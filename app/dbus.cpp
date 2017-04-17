@@ -35,6 +35,7 @@ bool DbusService::enableLMS()
     return session_bus.connect(QString("org.lightmediascanner"), QString("/org/lightmediascanner/Scanner1"), "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(lmsUpdate(QString,QVariantMap,QStringList)));
 }
 
+#if defined(HAVE_LIGHTMEDIASCANNER)
 void DbusService::lmsUpdate(const QString&, const QVariantMap& map, const QStringList&)
 {
     QVariantList mediaFiles;
@@ -53,3 +54,8 @@ void DbusService::lmsUpdate(const QString&, const QVariantMap& map, const QStrin
     else
         emit processPlaylistHide();
 }
+#else
+void DbusService::lmsUpdate(const QString&, const QVariantMap&, const QStringList&)
+{
+}
+#endif
