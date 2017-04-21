@@ -28,11 +28,26 @@ DbusService::DbusService(QObject *parent) : QObject(parent)
 bool DbusService::enableLMS()
 {
     QDBusConnection session_bus = QDBusConnection::sessionBus();
+    QDBusConnection system_bus = QDBusConnection::systemBus();
+    bool ret;
 
     if (!session_bus.isConnected())
         return false;
 
-    return session_bus.connect(QString("org.lightmediascanner"), QString("/org/lightmediascanner/Scanner1"), "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(lmsUpdate(QString,QVariantMap,QStringList)));
+    if (!system_bus.isConnected())
+        return false;
+
+    ret = session_bus.connect(QString("org.lightmediascanner"), QString("/org/lightmediascanner/Scanner1"), "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(lmsUpdate(QString,QVariantMap,QStringList)));
+    if (!ret)
+        return false;
+
+    /* Only subscribe to DeviceRemoved events, since we need lms scan to complete on insert */
+    return system_bus.connect(QString("org.freedesktop.UDisks"), QString("/org/freedesktop/UDisks"), "org.freedesktop.UDisks", "DeviceRemoved", this, SLOT(mediaRemoved(QDBusObjectPath)));
+}
+
+void DbusService::mediaRemoved(const QDBusObjectPath&)
+{
+        emit stopPlayback();
 }
 
 #if defined(HAVE_LIGHTMEDIASCANNER)

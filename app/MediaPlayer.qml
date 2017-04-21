@@ -46,6 +46,13 @@ ApplicationWindow {
     Connections {
         target: dbus
 
+        onStopPlayback: {
+            player.stop()
+            playlist.clear()
+            playlistmodel.setSource(playlist)
+            playlistview.visible = false
+        }
+
         onProcessPlaylistUpdate: {
             playlist.clear()
             playlist.addItems(mediaFiles)
