@@ -30,6 +30,7 @@
 class LightMediaScanner {
 public:
     LightMediaScanner(const QString& path);
+    ~LightMediaScanner();
     bool next(QString& item);
     static QVariantList processLightMediaScanner();
 private:

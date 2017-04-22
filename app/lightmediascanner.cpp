@@ -31,6 +31,12 @@ LightMediaScanner::LightMediaScanner(const QString& path)
     }
 }
 
+LightMediaScanner::~LightMediaScanner()
+{
+    lms.close();
+    QSqlDatabase::removeDatabase(lms.connectionName());
+}
+
 bool LightMediaScanner::next(QString& item)
 {
     if (!query.next())
