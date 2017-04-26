@@ -33,12 +33,14 @@ ApplicationWindow {
         property string title
         property int duration: 0
         property int position: 0
+        property int pos_offset: 0
 
         function disableBluetooth() {
             bluetooth.artist = ''
             bluetooth.title = ''
             bluetooth.duration = 0
             bluetooth.position = 0
+            bluetooth.pos_offset = 0
             bluetooth.connected = false
         }
     }
@@ -77,6 +79,7 @@ ApplicationWindow {
             if (avrcp_title)
                 bluetooth.title = avrcp_title
             bluetooth.duration = avrcp_duration
+            bluetooth.pos_offset = 0
         }
 
         onUpdatePlayerStatus: {
@@ -109,7 +112,7 @@ ApplicationWindow {
         running: (bluetooth.connected && bluetooth.state == "playing")
         repeat: true
         onTriggered: {
-            bluetooth.position = dbus.getCurrentPosition()
+            bluetooth.position = dbus.getCurrentPosition() - bluetooth.pos_offset
             slider.value = bluetooth.position
         }
     }
@@ -233,6 +236,7 @@ ApplicationWindow {
                             offImage: './images/AGL_MediaPlayer_BackArrow.svg'
                             onClicked: {
                                 if (bluetooth.connected) {
+                                    bluetooth.pos_offset = dbus.getCurrentPosition()
                                     dbus.processQMLEvent("Previous")
                                 } else {
                                     playlist.previous()
