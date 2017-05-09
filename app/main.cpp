@@ -90,8 +90,11 @@ int main(int argc, char *argv[])
 #if defined(HAVE_DBUS)
     DbusService dbus_service;
     context->setContextProperty("dbus", &dbus_service);
+#endif
 
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
+
+#if defined(HAVE_DBUS)
 #if defined(HAVE_LIGHTMEDIASCANNER)
     if (!dbus_service.enableLMS())
        qWarning() << "Cannot run enableLMS";
