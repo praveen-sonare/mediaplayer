@@ -20,6 +20,7 @@ import QtQuick.Controls 2.0
 import QtMultimedia 5.6
 import AGL.Demo.Controls 1.0
 import MediaPlayer 1.0
+import 'api' as API
 
 ApplicationWindow {
     id: root
@@ -43,6 +44,11 @@ ApplicationWindow {
             bluetooth.pos_offset = 0
             bluetooth.connected = false
         }
+    }
+
+    API.LightMediaScanner {
+        id: binding
+        url: bindingAddress
     }
 
     Connections {

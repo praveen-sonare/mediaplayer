@@ -2,10 +2,15 @@
 <widget xmlns="http://www.w3.org/ns/widgets" id="mediaplayer" version="0.1">
   <name>MediaPlayer</name>
   <icon src="icon.svg"/>
-  <content src="bin/mediaplayer" type="application/x-executable"/>
+  <content src="bin/mediaplayer" type="application/vnd.agl.native"/>
   <description>This is a demo application for multimedia</description>
   <author>Tasuku Suzuki &lt;tasuku.suzuki@qt.io&gt;</author>
   <license>APL 2.0</license>
+  <feature name="urn:AGL:widget:required-api">
+    <param name="lib/libmediaplayer-binding.so" value="local" />
+  </feature>
+  <feature name="urn:AGL:widget:required-permission">
+    <param name="urn:AGL:permission::public:no-htdocs" value="required" />
+    <param name="http://tizen.org/privilege/internal/dbus" value="required" />
+  </feature>
 </widget>
-
-

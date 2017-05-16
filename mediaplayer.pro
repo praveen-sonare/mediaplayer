@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
-SUBDIRS = app package
-package.depends += app
+SUBDIRS = app binding package
+package.depends += app binding

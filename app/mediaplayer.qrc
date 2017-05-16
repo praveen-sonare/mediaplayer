@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>MediaPlayer.qml</file>
+        <file>api/LightMediaScanner.qml</file>
     </qresource>
 </RCC>
