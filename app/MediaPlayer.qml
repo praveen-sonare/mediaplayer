@@ -54,21 +54,6 @@ ApplicationWindow {
     Connections {
         target: dbus
 
-        onStopPlayback: {
-            player.stop()
-            playlist.clear()
-            playlistmodel.setSource(playlist)
-            playlistview.visible = false
-        }
-
-        onProcessPlaylistUpdate: {
-            playlist.clear()
-            playlist.addItems(mediaFiles)
-
-            playlistmodel.setSource(playlist)
-            playlistview.visible = bluetooth.connected == false
-        }
-
         onProcessPlaylistHide: {
             playlistview.visible = false
             player.stop()
@@ -126,10 +111,6 @@ ApplicationWindow {
     Playlist {
         id: playlist
         playbackMode: random.checked ? Playlist.Random : loop.checked ? Playlist.Loop : Playlist.Sequential
-
-        Component.onCompleted: {
-            playlist.addItems(mediaFiles)
-        }
     }
 
 

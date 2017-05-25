@@ -10,10 +10,7 @@ config_libhomescreen {
 }
 
 packagesExist(sqlite3 lightmediascanner) {
-    HEADERS += lightmediascanner.h
-    SOURCES += lightmediascanner.cpp
     DEFINES += HAVE_LIGHTMEDIASCANNER
-    QT += sql
 }
 
 packagesExist(dbus-1) {

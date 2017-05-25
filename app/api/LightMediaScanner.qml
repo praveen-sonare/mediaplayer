@@ -43,21 +43,30 @@ WebSocket {
         console.debug("response: " + JSON.stringify(response))
         switch (json[0]) {
             case msgid.call:
-            break
+                break
             case msgid.retok:
-            root.statusString = request.status
-            var verb = verbs.shift()
-            if (verb == "media_added") {
-                console.debug("Media is inserted")
-            } else if (verb == "media_removed") {
-                console.debug("Media is removed")
-            }
-            break
+                root.statusString = request.status
+                var verb = verbs.shift()
+                if (verb == "media_result") {
+                    console.debug("Media result returned")
+                    playlist.addItems(response.Media)
+                }
+                break
             case msgid.reterr:
-            root.statusString = "Bad return value, binding probably not installed"
-            break
+                root.statusString = "Bad return value, binding probably not installed"
+                break
             case msgid.event:
-            break
+                var payload = JSON.parse(JSON.stringify(json[2]))
+                var event = payload.event
+                if (event == "media-manager/media_added") {
+                    console.debug("Media is inserted")
+                    playlist.addItems(json[2].data.Media)
+                } else if (event == "media-manager/media_removed") {
+                    console.debug("Media is removed")
+                    player.stop()
+                    playlist.clear()
+                }
+                break
         }
     }
 
@@ -65,6 +74,9 @@ WebSocket {
         switch (status) {
             case WebSocket.Open:
             console.debug("onStatusChanged: Open")
+            sendSocketMessage("subscribe", { value: "media_added" })
+            sendSocketMessage("subscribe", { value: "media_removed" })
+            root.populateMediaPlaylist()
             break
             case WebSocket.Error:
             root.statusString = "WebSocket error: " + root.errorString
@@ -78,5 +90,9 @@ WebSocket {
         console.debug("sendSocketMessage: " + JSON.stringify(requestJson))
         verbs.push(verb)
         sendTextMessage(JSON.stringify(requestJson))
+    }
+
+    function populateMediaPlaylist() {
+        sendSocketMessage("media_result", 'None')
     }
 }

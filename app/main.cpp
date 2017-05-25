@@ -29,10 +29,6 @@
 #include <libhomescreen.hpp>
 #endif
 
-#ifdef HAVE_LIGHTMEDIASCANNER
-#include "lightmediascanner.h"
-#endif
-
 #ifdef HAVE_DBUS
 #include "dbus.h"
 #endif
@@ -73,20 +69,19 @@ int main(int argc, char *argv[])
 
     qmlRegisterType<PlaylistWithMetadata>("MediaPlayer", 1, 0, "PlaylistWithMetadata");
 
-    QVariantList mediaFiles;
+    QQmlApplicationEngine engine;
+    QQmlContext *context = engine.rootContext();
 
-#ifdef HAVE_LIGHTMEDIASCANNER
-    mediaFiles = LightMediaScanner::processLightMediaScanner();
-#else
+#ifndef HAVE_LIGHTMEDIASCANNER
+    QVariantList mediaFiles;
     QString music;
 
     for (const auto &music : QStandardPaths::standardLocations(QStandardPaths::MusicLocation)) {
         mediaFiles.append(readMusicFile(music));
     }
-#endif
 
-    QQmlApplicationEngine engine;
-    QQmlContext *context = engine.rootContext();
+    context->setContextProperty("mediaFiles", mediaFiles);
+#endif
 
     QCommandLineParser parser;
     parser.addPositionalArgument("port", app.translate("main", "port for binding"));
@@ -110,8 +105,6 @@ int main(int argc, char *argv[])
         context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
     }
 
-    context->setContextProperty("mediaFiles", mediaFiles);
-
 #if defined(HAVE_DBUS)
     DbusService dbus_service;
     context->setContextProperty("dbus", &dbus_service);
@@ -120,10 +113,6 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 
 #if defined(HAVE_DBUS)
-#if defined(HAVE_LIGHTMEDIASCANNER)
-    if (!dbus_service.enableLMS())
-       qWarning() << "Cannot run enableLMS";
-#endif
     if (!dbus_service.enableBluetooth())
        qWarning() << "Cannot run enableBluetooth";
 #endif

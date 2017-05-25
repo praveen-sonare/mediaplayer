@@ -22,60 +22,6 @@ DbusService::DbusService(QObject *parent) : QObject(parent)
 }
 
 /*
- * Light Media Scanner
- */
-
-bool DbusService::enableLMS()
-{
-    QDBusConnection session_bus = QDBusConnection::sessionBus();
-    QDBusConnection system_bus = QDBusConnection::systemBus();
-    bool ret;
-
-    if (!session_bus.isConnected())
-        return false;
-
-    if (!system_bus.isConnected())
-        return false;
-
-    ret = session_bus.connect(QString("org.lightmediascanner"), QString("/org/lightmediascanner/Scanner1"), "org.freedesktop.DBus.Properties", "PropertiesChanged", this, SLOT(lmsUpdate(QString,QVariantMap,QStringList)));
-    if (!ret)
-        return false;
-
-    /* Only subscribe to DeviceRemoved events, since we need lms scan to complete on insert */
-    return system_bus.connect(QString("org.freedesktop.UDisks"), QString("/org/freedesktop/UDisks"), "org.freedesktop.UDisks", "DeviceRemoved", this, SLOT(mediaRemoved(QDBusObjectPath)));
-}
-
-void DbusService::mediaRemoved(const QDBusObjectPath&)
-{
-        emit stopPlayback();
-}
-
-#if defined(HAVE_LIGHTMEDIASCANNER)
-void DbusService::lmsUpdate(const QString&, const QVariantMap& map, const QStringList&)
-{
-    QVariantList mediaFiles;
-    QString music;
-
-    if (!map.contains("IsScanning") && !map.contains("WriteLocked"))
-        return;
-
-    if (map["IsScanning"].toBool() || map["WriteLocked"].toBool())
-        return;
-
-    mediaFiles = LightMediaScanner::processLightMediaScanner();
-
-    if (!mediaFiles.isEmpty())
-        emit processPlaylistUpdate(mediaFiles);
-    else
-        emit processPlaylistHide();
-}
-#else
-void DbusService::lmsUpdate(const QString&, const QVariantMap&, const QStringList&)
-{
-}
-#endif
-
-/*
  * Bluetooth
  */
 

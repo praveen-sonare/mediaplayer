@@ -35,7 +35,6 @@ class DbusService : public QObject {
 public:
     explicit DbusService(QObject *parent = 0);
 
-    bool enableLMS();
     bool enableBluetooth();
     Q_INVOKABLE void processQMLEvent(const QString&);
     Q_INVOKABLE long getCurrentPosition();
@@ -59,8 +58,6 @@ signals:
     void updatePlayerStatus(const QString status);
 
 private slots:
-    void lmsUpdate(const QString&, const QVariantMap&, const QStringList&);
-    void mediaRemoved(const QDBusObjectPath&);
     void newBluetoothDevice(const QDBusObjectPath&, const QVariantMap&);
     void removeBluetoothDevice(const QDBusObjectPath&, const QStringList&);
     void processBluetoothEvent(const QString&, const QVariantMap&, const QStringList&);
