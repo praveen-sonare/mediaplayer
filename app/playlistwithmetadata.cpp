@@ -78,6 +78,25 @@ void PlaylistWithMetadata::Private::connect()
             q->endInsertRows();
         }));
 
+        connections.append(q->connect(source, &QAbstractListModel::rowsAboutToBeRemoved, [&](const QModelIndex &parent, int first, int last) {
+            Q_UNUSED(parent)
+            q->beginRemoveRows(QModelIndex(), first, last);
+        }));
+        connections.append(q->connect(source, &QAbstractListModel::rowsRemoved, [&](const QModelIndex &parent, int first, int last) {
+            Q_UNUSED(parent)
+            for (int i = last; i >= first; --i) {
+                QUrl url = urls.at(i);
+                urls.removeAt(i);
+
+                players.remove(url);
+                title.remove(url);
+                artist.remove(url);
+                coverArt.remove(url);
+                duration.remove(url);
+            }
+            q->endRemoveRows();
+        }));
+
         int count = source->rowCount();
         if (count > 0) {
             q->beginInsertRows(QModelIndex(), 0, count);
