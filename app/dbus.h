@@ -28,8 +28,6 @@
 #include <QtDBus/QDBusReply>
 #include <QtDBus/QDBusConnection>
 
-#include "lightmediascanner.h"
-
 class DbusService : public QObject {
     Q_OBJECT
 public:
