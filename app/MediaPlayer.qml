@@ -273,12 +273,13 @@ ApplicationWindow {
                         }
 
                         Item { Layout.fillWidth: true }
-//                        Image {
-//                            source: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
-//                        }
-//                        Image {
-//                            source: './images/AGL_MediaPlayer_Radio_Inactive.svg'
-//                        }
+ 
+                        ToggleButton {
+                              enabled: false
+                              checked: bluetooth.connected
+                              offImage: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
+                              onImage: './images/AGL_MediaPlayer_Bluetooth_Active.svg'
+                        }
                     }
                 }
             }
