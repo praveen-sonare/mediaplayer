@@ -29,10 +29,6 @@
 #include <libhomescreen.hpp>
 #endif
 
-#ifdef HAVE_DBUS
-#include "dbus.h"
-#endif
-
 #include "playlistwithmetadata.h"
 
 #ifndef HAVE_LIGHTMEDIASCANNER
@@ -105,17 +101,7 @@ int main(int argc, char *argv[])
         context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
     }
 
-#if defined(HAVE_DBUS)
-    DbusService dbus_service;
-    context->setContextProperty("dbus", &dbus_service);
-#endif
-
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
-
-#if defined(HAVE_DBUS)
-    if (!dbus_service.enableBluetooth())
-       qWarning() << "Cannot run enableBluetooth";
-#endif
 
     return app.exec();
 }
