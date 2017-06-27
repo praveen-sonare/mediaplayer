@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>MediaPlayer.qml</file>
         <file>api/LightMediaScanner.qml</file>
+	<file>api/BluetoothManager.qml</file>
     </qresource>
 </RCC>

@@ -14,8 +14,6 @@ packagesExist(sqlite3 lightmediascanner) {
 }
 
 packagesExist(dbus-1) {
-    HEADERS += dbus.h
-    SOURCES += dbus.cpp
     DEFINES += HAVE_DBUS
     QT += dbus
 }
