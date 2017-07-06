@@ -225,7 +225,7 @@ ApplicationWindow {
                         Item { Layout.fillWidth: true }
  
                         ToggleButton {
-                              enabled: bluetooth.connected
+                              visible: bluetooth.connected
                               checked: bluetooth.av_connected
                               offImage: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
                               onImage: './images/AGL_MediaPlayer_Bluetooth_Active.svg'
