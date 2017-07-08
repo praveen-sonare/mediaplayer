@@ -78,7 +78,7 @@ ApplicationWindow {
                 height: sourceSize.height * width / sourceSize.width
                 fillMode: Image.PreserveAspectCrop
                 source: player.metaData.coverArtImage ? player.metaData.coverArtImage : ''
-                visible: bluetooth.connected == false
+                visible: bluetooth.av_connected == false
             }
 
             Item {

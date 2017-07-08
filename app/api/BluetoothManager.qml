@@ -85,7 +85,6 @@ WebSocket {
                     root.deviceAddress = address
                     if (!address) {
                         root.connected = false
-                        playlistview.visible = true
                     }
                 }
                 break
@@ -173,7 +172,6 @@ WebSocket {
     function connect_profiles() {
         sendSocketMessage("connect", { "value": root.deviceAddress, "uuid": a2dp_uuid })
         sendSocketMessage("connect", { "value": root.deviceAddress, "uuid": avrcp_uuid })
-        root.av_connected = true
     }
 
     function disconnect_profiles() {
