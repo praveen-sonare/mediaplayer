@@ -26,6 +26,7 @@ WebSocket {
     property string statusString: "waiting..."
     property string apiString: "media-manager"
     property var verbs: []
+    property var items: []
     property string payloadLength: "9999"
 
     readonly property var msgid: {
@@ -33,6 +34,16 @@ WebSocket {
         "retok": 3,
         "reterr": 4,
         "event": 5
+    }
+
+    function validateItem(media) {
+        for (var i = 0; i < media.length; i++) {
+            var item = media[i]
+            if (root.items.indexOf(item) < 0) {
+                playlist.addItem(item)
+                root.items.push(item)
+            }
+        }
     }
 
     onTextMessageReceived: {
@@ -49,7 +60,7 @@ WebSocket {
                 var verb = verbs.shift()
                 if (verb == "media_result") {
                     console.debug("Media result returned")
-                    playlist.addItems(response.Media)
+                    validateItem(response.Media)
                 }
                 break
             case msgid.reterr:
@@ -60,11 +71,18 @@ WebSocket {
                 var event = payload.event
                 if (event == "media-manager/media_added") {
                     console.debug("Media is inserted")
-                    playlist.addItems(json[2].data.Media)
+                    validateItem(json[2].data.Media)
                 } else if (event == "media-manager/media_removed") {
+                    var removed = 0
                     console.debug("Media is removed")
                     player.stop()
-                    playlist.clear()
+
+                    for (var i = 0; i < root.items.length; i++) {
+                        if (root.items[i].startsWith(json[2].data.Path)) {
+                            playlist.removeItem(i - removed++)
+                        }
+                    }
+                    root.items = root.items.filter(function (item) { return !item.startsWith(json[2].data.Path) })
                 }
                 break
         }
