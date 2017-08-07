@@ -31,23 +31,6 @@
 
 #include "playlistwithmetadata.h"
 
-#ifndef HAVE_LIGHTMEDIASCANNER
-QVariantList readMusicFile(const QString &path)
-{
-    QVariantList ret;
-    QDir dir(path);
-    for (const auto &entry : dir.entryList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name)) {
-        QFileInfo fileInfo(dir.absoluteFilePath(entry));
-        if (fileInfo.isDir()) {
-            ret.append(readMusicFile(fileInfo.absoluteFilePath()));
-        } else if (fileInfo.isFile()) {
-            ret.append(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
-        }
-    }
-    return ret;
-}
-#endif
-
 int main(int argc, char *argv[])
 {
 #ifdef HAVE_LIBHOMESCREEN
@@ -67,17 +50,6 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
-
-#ifndef HAVE_LIGHTMEDIASCANNER
-    QVariantList mediaFiles;
-    QString music;
-
-    for (const auto &music : QStandardPaths::standardLocations(QStandardPaths::MusicLocation)) {
-        mediaFiles.append(readMusicFile(music));
-    }
-
-    context->setContextProperty("mediaFiles", mediaFiles);
-#endif
 
     QCommandLineParser parser;
     parser.addPositionalArgument("port", app.translate("main", "port for binding"));
