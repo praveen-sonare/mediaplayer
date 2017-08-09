@@ -144,10 +144,8 @@ WebSocket {
         switch (status) {
             case WebSocket.Open:
             console.debug("onStatusChanged: Open")
-            sendSocketMessage("eventadd", { "tag" : "device_updated", "name" : "device_updated" })
-            sendSocketMessage("eventsub", { "tag" : "device_updated" })
-            sendSocketMessage("eventadd", { "tag" : "connection", "name" : "connection" })
-            sendSocketMessage("eventsub", { "tag" : "connection" })
+            sendSocketMessage("subscribe", { value : "device_updated" })
+            sendSocketMessage("subscribe", { value : "connection" })
             sendSocketMessage("discovery_result", 'None')
             break
             case WebSocket.Error:
