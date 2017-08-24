@@ -86,8 +86,11 @@ static json_object *new_json_object_from_device(GList *list)
         json_object_array_add(jarray, jstring);
     }
 
-    if (jstring == NULL)
+    if (jstring == NULL) {
+        json_object_put(jarray);
+        json_object_put(jresp);
         return NULL;
+    }
 
     json_object_object_add(jresp, "Media", jarray);
 
