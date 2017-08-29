@@ -141,6 +141,8 @@ GList* media_lightmediascanner_scan(void)
         list = g_list_append(list, g_strdup_printf("file://%s", path));
     }
 
+    sqlite3_finalize(res);
+
     return list;
 }
 
