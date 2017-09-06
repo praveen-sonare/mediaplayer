@@ -24,7 +24,7 @@ WebSocket {
     url: bindingAddress
 
     property string statusString: "waiting..."
-    property string apiString: "media-manager"
+    property string apiString: "mediascanner"
     property var verbs: []
     property var items: []
     property string payloadLength: "9999"
@@ -69,10 +69,10 @@ WebSocket {
             case msgid.event:
                 var payload = JSON.parse(JSON.stringify(json[2]))
                 var event = payload.event
-                if (event == "media-manager/media_added") {
+                if (event == "mediascanner/media_added") {
                     console.debug("Media is inserted")
                     validateItem(json[2].data.Media)
-                } else if (event == "media-manager/media_removed") {
+                } else if (event == "mediascanner/media_removed") {
                     var removed = 0
                     console.debug("Media is removed")
                     player.stop()
