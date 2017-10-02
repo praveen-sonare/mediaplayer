@@ -38,7 +38,7 @@ WebSocket {
 
     function validateItem(media) {
         for (var i = 0; i < media.length; i++) {
-            var item = media[i]
+            var item = media[i].path
             if (root.items.indexOf(item) < 0) {
                 playlist.addItem(item)
                 root.items.push(item)
