@@ -25,25 +25,14 @@ import 'api' as API
 ApplicationWindow {
     id: root
 
-    API.LightMediaScanner {
-        id: binding
+    API.MediaPlayer {
+        id: player
         url: bindingAddress
     }
 
     API.BluetoothManager {
         id: bluetooth
         url: bindingAddress
-    }
-
-    MediaPlayer {
-        id: player
-        audioRole: MediaPlayer.MusicRole
-        autoLoad: true
-        playlist: playlist
-
-        function time2str(value) {
-            return Qt.formatTime(new Date(value), 'mm:ss')
-        }
     }
 
     Timer {
@@ -57,11 +46,9 @@ ApplicationWindow {
         }
     }
 
-    Playlist {
+    ListModel {
         id: playlist
-        playbackMode: random.checked ? Playlist.Random : loop.checked ? Playlist.Loop : Playlist.Sequential
     }
-
 
     ColumnLayout {
         anchors.fill: parent
@@ -77,7 +64,7 @@ ApplicationWindow {
                 anchors.bottom: parent.bottom
                 height: sourceSize.height * width / sourceSize.width
                 fillMode: Image.PreserveAspectCrop
-                source: player.metaData.coverArtImage ? player.metaData.coverArtImage : ''
+                source: player.cover_art ? player.cover_art : ''
                 visible: bluetooth.av_connected == false
             }
 
@@ -109,8 +96,10 @@ ApplicationWindow {
                             ToggleButton {
                                 id: loop
                                 visible: bluetooth.connected == false
+                                checked: player.loop_state
                                 offImage: './images/AGL_MediaPlayer_Loop_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Loop_Active.svg'
+                                onClicked: { player.loop(checked) }
                             }
                         }
                         ColumnLayout {
@@ -118,13 +107,13 @@ ApplicationWindow {
                             Label {
                                 id: title
                                 Layout.alignment: Layout.Center
-                                text: bluetooth.av_connected ? bluetooth.title : (player.metaData.title ? player.metaData.title : '')
+                                text: bluetooth.av_connected ? bluetooth.title : (player.title ? player.title : '')
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                             }
                             Label {
                                 Layout.alignment: Layout.Center
-                                text: bluetooth.av_connected ? bluetooth.artist : (player.metaData.contributingArtist ? player.metaData.contributingArtist : '')
+                                text: bluetooth.av_connected ? bluetooth.artist : (player.artist ? player.artist : '')
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                                 font.pixelSize: title.font.pixelSize * 0.6
@@ -176,7 +165,7 @@ ApplicationWindow {
                                     bluetooth.sendMediaCommand("Previous")
                                     bluetooth.position = 0
                                 } else {
-                                    playlist.previous()
+                                    player.previous()
                                 }
                             }
                         }
@@ -192,7 +181,7 @@ ApplicationWindow {
                             }
                             states: [
                                 State {
-                                    when: player.playbackState === MediaPlayer.PlayingState
+                                    when: player.running === true
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
@@ -217,7 +206,7 @@ ApplicationWindow {
                                 if (bluetooth.av_connected) {
                                     bluetooth.sendMediaCommand("Next")
                                 } else {
-                                    playlist.next()
+                                    player.next()
                                 }
                             }
                         }
@@ -247,11 +236,6 @@ ApplicationWindow {
             Layout.fillHeight: true
             Layout.preferredHeight: 407
 
-	    PlaylistWithMetadata {
-	        id: playlistmodel
-                source: playlist
-            }
-
             ListView {
                 anchors.fill: parent
                 id: playlistview
@@ -262,8 +246,8 @@ ApplicationWindow {
                     text: 'PLAYLIST'
                     opacity: 0.5
                 }
-                model: playlistmodel
-                currentIndex: playlist.currentIndex
+                model: playlist
+                currentIndex: -1
 
                 delegate: MouseArea {
                     id: delegate
@@ -273,12 +257,6 @@ ApplicationWindow {
                         anchors.fill: parent
                         anchors.leftMargin: 50
                         anchors.rightMargin: 50
-                        Image {
-                            source: model.coverArt
-                            fillMode: Image.PreserveAspectFit
-                            Layout.preferredWidth: delegate.height
-                            Layout.preferredHeight: delegate.height
-                        }
                         ColumnLayout {
                             Layout.fillWidth: true
                             Label {
@@ -292,14 +270,14 @@ ApplicationWindow {
                                 font.pixelSize: 32
                             }
                         }
-                        Label {
-                            text: player.time2str(model.duration)
-                            color: '#66FF99'
-                            font.pixelSize: 32
-                        }
+                        //Label {
+                        //    text: player.time2str(model.duration)
+                        //    color: '#66FF99'
+                        //    font.pixelSize: 32
+                        //}
                     }
                     onClicked: {
-                        playlist.currentIndex = model.index
+                        player.pick_track(playlistview.model.get(index).index)
                         player.play()
                     }
                 }
