@@ -1,11 +1,7 @@
 TARGET = mediaplayer
-QT = quickcontrols2 multimedia
+QT = quickcontrols2
 
-HEADERS += \
-    playlistwithmetadata.h
-
-SOURCES = main.cpp \
-    playlistwithmetadata.cpp
+SOURCES = main.cpp
 
 RESOURCES += \
     mediaplayer.qrc \

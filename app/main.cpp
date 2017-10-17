@@ -29,8 +29,6 @@
 #include <libhomescreen.hpp>
 #endif
 
-#include "playlistwithmetadata.h"
-
 int main(int argc, char *argv[])
 {
 #ifdef HAVE_LIBHOMESCREEN
@@ -45,8 +43,6 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQuickStyle::setStyle("AGL");
-
-    qmlRegisterType<PlaylistWithMetadata>("MediaPlayer", 1, 0, "PlaylistWithMetadata");
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
