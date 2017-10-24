@@ -86,12 +86,12 @@ ApplicationWindow {
                         Layout.fillHeight: true
                         Row {
                             spacing: 20
-                            ToggleButton {
-                                id: random
-                                visible: bluetooth.connected == false
-                                offImage: './images/AGL_MediaPlayer_Shuffle_Inactive.svg'
-                                onImage: './images/AGL_MediaPlayer_Shuffle_Active.svg'
-                            }
+                            //ToggleButton {
+                            //    id: random
+                            //    visible: bluetooth.connected == false
+                            //    offImage: './images/AGL_MediaPlayer_Shuffle_Inactive.svg'
+                            //    onImage: './images/AGL_MediaPlayer_Shuffle_Active.svg'
+                            //}
                             ToggleButton {
                                 id: loop
                                 visible: bluetooth.connected == false
