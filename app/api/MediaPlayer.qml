@@ -49,7 +49,7 @@ WebSocket {
         console.debug("Raw response: " + message)
         var request = json[2].request
         var response = json[2].response
-        console.debug("response: " + JSON.stringify(response))
+        //console.debug("response: " + JSON.stringify(response))
         switch (json[0]) {
             case msgid.call:
                 break
