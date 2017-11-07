@@ -56,7 +56,7 @@ void QLibWindowmanager::set_event_handler(enum QEventType et,
 
 void QLibWindowmanager::slotActivateSurface(){
     if(!isActive){
-        qDebug("Let's show radio");
+        qDebug("Let's show %s", applabel.c_str());
         isActive = true;
         this->activateSurface(applabel.c_str());
     }
