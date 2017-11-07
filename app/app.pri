@@ -4,12 +4,6 @@ QMAKE_LFLAGS += "-Wl,--hash-style=gnu -Wl,--as-needed"
 load(configure)
 qtCompileTest(libhomescreen)
 
-config_libhomescreen {
-    CONFIG += link_pkgconfig
-    PKGCONFIG += homescreen
-    DEFINES += HAVE_LIBHOMESCREEN
-}
-
 packagesExist(sqlite3 lightmediascanner) {
     DEFINES += HAVE_LIGHTMEDIASCANNER
 }

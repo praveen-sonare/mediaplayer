@@ -1,5 +1,5 @@
 TARGET = mediaplayer
-QT = quickcontrols2
+QT = quickcontrols2 qml
 
 HEADERS = qlibwindowmanager.h qlibsoundmanager.h
 SOURCES = main.cpp qlibwindowmanager.cpp qlibsoundmanager.cpp
