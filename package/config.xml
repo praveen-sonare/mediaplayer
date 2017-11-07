@@ -9,6 +9,7 @@
   <feature name="urn:AGL:widget:required-api">
     <param name="mediaplayer" value="ws" />
     <param name="windowmanager" value="ws" />
+    <param name="soundmanager" value="ws" />
     <param name="Bluetooth-Manager" value="ws" />
   </feature>
   <feature name="urn:AGL:widget:required-permission">

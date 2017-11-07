@@ -28,8 +28,10 @@
 
 #include <QQuickWindow>
 #include "qlibwindowmanager.h"
+#include "qlibsoundmanager.h"
 
 static QLibWindowmanager* qwm;
+static QLibSoundmanager* smw;
 static std::string myname = std::string("MediaPlayer");
 
 int main(int argc, char *argv[])
@@ -61,7 +63,9 @@ int main(int argc, char *argv[])
         query.addQueryItem(QStringLiteral("token"), secret);
         bindingAddress.setQuery(query);
         context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
-         qwm = new QLibWindowmanager();
+        qwm = new QLibWindowmanager();
+        smw = new QLibSoundmanager();
+
         // WindowManager
         if(qwm->init(port,secret) != 0){
             exit(EXIT_FAILURE);
@@ -73,9 +77,16 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Surface got syncDraw!\n");
             qwm->endDraw(myname.c_str());
             });
-        qwm->set_event_handler(QLibWindowmanager::Event_FlushDraw, [](json_object *object) {
-            fprintf(stderr, "Surface got flushDraw!\n");;
-            });
+        qwm->set_event_handler(QLibWindowmanager::Event_FlushDraw, [&engine, smw](json_object *object) {
+            fprintf(stderr, "Surface got flushDraw!\n");
+            QObject *root = engine.rootObjects().first();
+            int sourceID = root->property("sourceID").toInt();
+            smw->connect(sourceID, "default");
+        // SoundManager, event handler is set inside smw
+        smw->init(port, secret);
+
+        engine.rootContext()->setContextProperty("smw",smw);
+
     }
 
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
@@ -83,6 +94,10 @@ int main(int argc, char *argv[])
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
         QObject::connect(window, SIGNAL(frameSwapped()),
             qwm, SLOT(slotActivateSurface()));  // This should be disconnected, but when...
+        QObject::connect(smw, SIGNAL(reply(QVariant)),
+            root, SLOT(slotReply(QVariant)));
+        QObject::connect(smw, SIGNAL(event(QVariant, QVariant)),
+            root, SLOT(slotEvent(QVariant, QVariant)));
 
     return app.exec();
 }
