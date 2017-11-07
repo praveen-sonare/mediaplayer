@@ -29,7 +29,9 @@
 #include <QQuickWindow>
 #include "qlibwindowmanager.h"
 #include "qlibsoundmanager.h"
+#include <libhomescreen.hpp>
 
+static LibHomeScreen* hs;
 static QLibWindowmanager* qwm;
 static QLibSoundmanager* smw;
 static std::string myname = std::string("MediaPlayer");
@@ -63,6 +65,10 @@ int main(int argc, char *argv[])
         query.addQueryItem(QStringLiteral("token"), secret);
         bindingAddress.setQuery(query);
         context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
+
+        std::string token = secret.toStdString();
+
+        hs = new LibHomeScreen();
         qwm = new QLibWindowmanager();
         smw = new QLibSoundmanager();
 
@@ -82,6 +88,20 @@ int main(int argc, char *argv[])
             QObject *root = engine.rootObjects().first();
             int sourceID = root->property("sourceID").toInt();
             smw->connect(sourceID, "default");
+            });
+        
+        // HomeScreen
+        hs->init(port, token.c_str());
+        hs->set_event_handler(LibHomeScreen::Event_TapShortcut, [qwm](json_object *object){
+            const char *appname = json_object_get_string(
+                json_object_object_get(object, "application_name"));
+            if(myname == appname)
+            {
+                qDebug("Surface %s got tapShortcut\n", appname);
+                qwm->activateSurface(myname.c_str());
+            }
+        });
+
         // SoundManager, event handler is set inside smw
         smw->init(port, secret);
 

@@ -5,7 +5,7 @@ HEADERS = qlibwindowmanager.h qlibsoundmanager.h
 SOURCES = main.cpp qlibwindowmanager.cpp qlibsoundmanager.cpp
 
 CONFIG += link_pkgconfig
-PKGCONFIG += libwindowmanager libsoundmanager
+PKGCONFIG += libwindowmanager libsoundmanager libhomescreen
 
 RESOURCES += \
     mediaplayer.qrc \
