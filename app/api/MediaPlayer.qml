@@ -72,6 +72,9 @@ WebSocket {
                         root.running = response.playing
                     }
                 } else if (verb == "metadata") {
+                    root.title = response.title ? response.title : ''
+                    root.artist = response.artist ? response.artist : ''
+
                     root.cover_art = response.image ? response.image : ''
                 }
                 break
@@ -135,6 +138,7 @@ WebSocket {
             sendSocketMessage("subscribe", { value: "metadata" })
             sendSocketMessage("playlist", 'None')
             sendSocketMessage("subscribe", { value: "playlist" })
+            sendSocketMessage("metadata", 'None')
             break
             case WebSocket.Error:
             root.statusString = "WebSocket error: " + root.errorString
