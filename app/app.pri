@@ -5,7 +5,7 @@ qtCompileTest(libhomescreen)
 
 config_libhomescreen {
     CONFIG += link_pkgconfig
-    PKGCONFIG += homescreen
+    PKGCONFIG += homescreen soundmanager
     DEFINES += HAVE_LIBHOMESCREEN
 }
 

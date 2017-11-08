@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016 The Qt Company Ltd.
+ * Copyright (C) 2017 Toyota Motor Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +21,21 @@ import QtQuick.Controls 2.0
 import QtMultimedia 5.6
 import AGL.Demo.Controls 1.0
 import MediaPlayer 1.0
+import QtQml.StateMachine 1.0 as MPSM
 import 'api' as API
 
 ApplicationWindow {
     id: root
+    
+    property int sourceID: 0
+    property int  connectionID
+    property int  sourceIndex
+
+    signal playMediaplayer
+    signal stopMediaplayer
+    signal disconnected
+    signal paused
+    signal connected
 
     API.LightMediaScanner {
         id: binding
@@ -43,6 +55,159 @@ ApplicationWindow {
 
         function time2str(value) {
             return Qt.formatTime(new Date(value), 'mm:ss')
+        }
+    }
+
+    MPSM.StateMachine{
+        id: mediaplayerState
+        initialState: stop
+        running: true
+        MPSM.State{
+            id: haveSoundRight
+            MPSM.SignalTransition{
+                targetState: stop
+                signal: disconnected
+            }
+            MPSM.SignalTransition{
+                targetState: pause
+                signal: paused
+            }
+            MPSM.SignalTransition{
+                targetState: playing
+                signal: playMediaplayer
+            }
+            onEntered: {
+                console.log("enter haveSoundRight")
+            }
+            onExited : {
+                // Nothing to do
+            }
+        }
+        MPSM.State{
+            id: stop
+            MPSM.SignalTransition{
+                targetState: haveSoundRight
+                signal: connected
+            }
+            onEntered: {
+                console.log("enter stop state")
+            }
+            onExited : {
+                // Nothing to do
+            }
+        }
+        MPSM.State{
+            id: pause
+            MPSM.SignalTransition{
+                targetState: haveSoundRight
+                signal: connected
+            }
+            MPSM.SignalTransition{
+                targetState: stop
+                signal: disconnected
+            }
+            onEntered: {
+                console.log("enter pause state")
+            }
+            onExited : {
+                // Nothing to do
+            }
+        }
+        MPSM.State{
+            id: playing
+            MPSM.SignalTransition{
+                targetState: haveSoundRight
+                signal: stopMediaplayer
+            }
+            MPSM.SignalTransition{
+                targetState: lostSoundRight
+                signal: disconnected
+            }
+            onEntered: {
+                console.log("enter playing state")
+                player.play()
+            }
+            onExited : {
+                player.pause()
+            }
+        }
+        MPSM.State{
+            id: lostSoundRight
+            MPSM.SignalTransition{
+                targetState: playing
+                signal: connected
+            }
+            onEntered: {
+                console.log("enter lostSoundRight")
+            }
+            onExited : {
+            }
+        }
+        MPSM.State{
+            id: temporaryLostSoundRight
+            MPSM.SignalTransition{
+                targetState: playing
+                signal: connected
+            }
+            MPSM.SignalTransition{
+                targetState: lostSoundRight
+                signal: disconnected
+            }
+            onEntered: {
+                console.log("enter lostSoundRight")
+            }
+            onExited : {
+            }
+        }
+    }
+
+    function slotReply(msg){
+        var jstr = JSON.stringify(msg)
+        var content = JSON.parse(jstr);
+        var verb = content.response.verb
+        var err = content.response.error
+        switch(verb)
+        {
+            case "connect":
+                if(err == 0){
+                    connectionID = content.response.mainConnectionID
+                }
+                break;
+            case "registerSource":
+                if(err == 0){
+                    sourceID = content.response.sourceID
+                }
+        }
+    }
+
+    function slotEvent(event,msg){
+        var jstr = JSON.stringify(msg)
+        var content = JSON.parse(jstr);
+        var eventName = content.event
+        switch(eventName)
+        {
+            case "soundmanager\/asyncSetSourceState":
+                // This event doesn't come for now
+                if(sourceID == content.data.sourceID){
+                    console.log("mediaplayer: call ackSetSourceState")
+                    smw.ackSetSourceState(content.data.handle, 0)
+                    switch(content.data.sourceState){
+                        case "on":
+                            connected()
+                            break;
+                        case "off":
+                            disconnected()
+                            break;
+                        case "paused":
+                            paused()
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -187,7 +352,7 @@ ApplicationWindow {
                                 if (bluetooth.av_connected) {
                                     bluetooth.sendMediaCommand("Play")
                                 } else {
-                                    player.play()
+                                    playMediaplayer()
                                 }
                             }
                             states: [
@@ -196,7 +361,9 @@ ApplicationWindow {
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
-                                        onClicked: player.pause()
+                                        onClicked: {
+                                            stopMediaplayer()
+                                        }
                                     }
                                 },
                                 State {
@@ -247,8 +414,8 @@ ApplicationWindow {
             Layout.fillHeight: true
             Layout.preferredHeight: 407
 
-	    PlaylistWithMetadata {
-	        id: playlistmodel
+	        PlaylistWithMetadata {
+	            id: playlistmodel
                 source: playlist
             }
 
@@ -300,7 +467,9 @@ ApplicationWindow {
                     }
                     onClicked: {
                         playlist.currentIndex = model.index
-                        player.play()
+                        sourceIndex = model.index;
+                        console.log("mediaplayer: call connect")
+                        playMediaplayer()
                     }
                 }
 
@@ -309,6 +478,9 @@ ApplicationWindow {
                     opacity: 0.25
                 }
             }
+        }
+        Component.onCompleted: {
+            smw.registerSource("mediaplayer")
         }
     }
 }

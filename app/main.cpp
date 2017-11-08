@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016 The Qt Company Ltd.
+ * Copyright (C) 2017 Toyota Motor Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,61 +24,35 @@
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
 #include <QtQml/qqml.h>
+#include <QQuickWindow>
 #include <QtQuickControls2/QQuickStyle>
-
-#ifdef HAVE_LIBHOMESCREEN
+#include "qlibsoundmanager.h"
 #include <libhomescreen.hpp>
-#endif
 
 #include "playlistwithmetadata.h"
+#include "qlibwindowmanager.h"
 
-#ifndef HAVE_LIGHTMEDIASCANNER
-QVariantList readMusicFile(const QString &path)
-{
-    QVariantList ret;
-    QDir dir(path);
-    for (const auto &entry : dir.entryList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name)) {
-        QFileInfo fileInfo(dir.absoluteFilePath(entry));
-        if (fileInfo.isDir()) {
-            ret.append(readMusicFile(fileInfo.absoluteFilePath()));
-        } else if (fileInfo.isFile()) {
-            ret.append(QUrl::fromLocalFile(fileInfo.absoluteFilePath()));
-        }
-    }
-    return ret;
-}
-#endif
+static LibHomeScreen* hs;
+static QLibWindowmanager* qwm;
+static QLibSoundmanager* smw;
+static std::string myname = std::string("MediaPlayer");
+
+using namespace std;
+static void onRep(struct json_object* reply_contents);
+static void onEv(const std::string& event, struct json_object* event_contents);
 
 int main(int argc, char *argv[])
 {
-#ifdef HAVE_LIBHOMESCREEN
-    LibHomeScreen libHomeScreen;
-
-    if (!libHomeScreen.renderAppToAreaAllowed(0, 1)) {
-        qWarning() << "renderAppToAreaAllowed is denied";
-        return -1;
-    }
-#endif
 
     QGuiApplication app(argc, argv);
-
+    qwm = new QLibWindowmanager();
+    hs = new LibHomeScreen();
     QQuickStyle::setStyle("AGL");
 
     qmlRegisterType<PlaylistWithMetadata>("MediaPlayer", 1, 0, "PlaylistWithMetadata");
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
-
-#ifndef HAVE_LIGHTMEDIASCANNER
-    QVariantList mediaFiles;
-    QString music;
-
-    for (const auto &music : QStandardPaths::standardLocations(QStandardPaths::MusicLocation)) {
-        mediaFiles.append(readMusicFile(music));
-    }
-
-    context->setContextProperty("mediaFiles", mediaFiles);
-#endif
 
     QCommandLineParser parser;
     parser.addPositionalArgument("port", app.translate("main", "port for binding"));
@@ -99,9 +74,58 @@ int main(int argc, char *argv[])
         query.addQueryItem(QStringLiteral("token"), secret);
         bindingAddress.setQuery(query);
         context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
-    }
 
+        /* This is window manager test */
+        std::string token = secret.toStdString();
+
+        if(qwm->init(port,token.c_str()) != 0){
+            exit(EXIT_FAILURE);
+        }
+
+        if (qwm->requestSurface(myname.c_str()) != 0) {
+            exit(EXIT_FAILURE);
+        }
+
+        // prepare to use homescreen
+        hs->init(port, token.c_str());
+
+        hs->set_event_handler(LibHomeScreen::Event_TapShortcut, [qwm](json_object *object){
+            const char *appname = json_object_get_string(
+                json_object_object_get(object, "application_name"));
+            if(myname == appname)
+            {
+                qDebug("[HS]mediaplayer: activateSurface\n");
+                qwm->activateSurface(myname.c_str());
+            }
+        });
+
+        // prepare to use soundmangaer
+        smw = new QLibSoundmanager();
+        smw->init(port, secret);
+        engine.rootContext()->setContextProperty("smw",smw);
+
+        qwm->set_event_handler(QLibWindowmanager::Event_SyncDraw, [smw, qwm](json_object *object) {
+            fprintf(stderr, "[WM]Surface got syncDraw!\n");
+            qwm->endDraw(myname.c_str());
+            // Something to to if needed
+        });
+        qwm->set_event_handler(QLibWindowmanager::Event_FlushDraw, [smw, &engine](json_object *object) {
+            fprintf(stderr, "[WM]Surface got FlushDraw!\n");
+            // Something to to if needed
+            QObject *root = engine.rootObjects().first();
+            int sourceID = root->property("sourceID").toInt();
+            smw->connect(sourceID, "default");
+        });
+    }
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 
+    QObject *root = engine.rootObjects().first();
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
+    QObject::connect(window, SIGNAL(frameSwapped()), qwm, SLOT(slotActivateSurface()));
+    QObject::connect(smw, SIGNAL(reply(QVariant)),
+        root, SLOT(slotReply(QVariant)));
+    QObject::connect(smw, SIGNAL(event(QVariant, QVariant)),
+        root, SLOT(slotEvent(QVariant, QVariant)));
+        
     return app.exec();
 }

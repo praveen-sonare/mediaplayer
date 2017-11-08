@@ -7,6 +7,10 @@
   <author>Tasuku Suzuki &lt;tasuku.suzuki@qt.io&gt;</author>
   <license>APL 2.0</license>
   <feature name="urn:AGL:widget:required-api">
+    <!-- Add Sound Manager service  -->
+    <param name="soundmanager" value="ws" />
+    <param name="windowmanager" value="ws" />
+    <param name="homescreen" value="ws" />
     <param name="lib/libmediaplayer-binding.so" value="local" />
     <param name="Bluetooth-Manager" value="ws" />
   </feature>
