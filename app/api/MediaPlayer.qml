@@ -46,7 +46,7 @@ WebSocket {
 
     onTextMessageReceived: {
         var json = JSON.parse(message)
-        console.debug("Raw response: " + message)
+        //console.debug("Raw response: " + message)
         var request = json[2].request
         var response = json[2].response
         //console.debug("response: " + JSON.stringify(response))
