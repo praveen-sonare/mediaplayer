@@ -10,10 +10,6 @@ config_libhomescreen {
     DEFINES += HAVE_LIBHOMESCREEN
 }
 
-packagesExist(sqlite3 lightmediascanner) {
-    DEFINES += HAVE_LIGHTMEDIASCANNER
-}
-
 packagesExist(dbus-1) {
     DEFINES += HAVE_DBUS
     QT += dbus
