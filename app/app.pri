@@ -10,9 +10,4 @@ config_libhomescreen {
     DEFINES += HAVE_LIBHOMESCREEN
 }
 
-packagesExist(dbus-1) {
-    DEFINES += HAVE_DBUS
-    QT += dbus
-}
-
 DESTDIR = $${OUT_PWD}/../package/root/bin

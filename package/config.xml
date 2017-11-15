@@ -14,6 +14,5 @@
   </feature>
   <feature name="urn:AGL:widget:required-permission">
     <param name="urn:AGL:permission::public:no-htdocs" value="required" />
-    <param name="http://tizen.org/privilege/internal/dbus" value="required" />
   </feature>
 </widget>
