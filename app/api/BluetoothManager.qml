@@ -101,6 +101,9 @@ WebSocket {
                     var data = payload.data
                     var metadata = data.Metadata
 
+                    if (root.deviceAddress == "")
+                        root.deviceAddress = data.Address
+
                     if (root.deviceAddress != data.Address)
                         break
 
@@ -109,6 +112,7 @@ WebSocket {
                         sendSocketMessage("discovery_result", 'None')
                         break
                     }
+                    root.connected = data.Connected == "True"
                     root.av_connected = data.AVPConnected == "True"
 
                     if ('Position' in metadata) {

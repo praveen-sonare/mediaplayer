@@ -41,7 +41,6 @@ ApplicationWindow {
         repeat: true
         onTriggered: {
             bluetooth.position = bluetooth.position + 250
-            slider.value = bluetooth.position
         }
     }
 
