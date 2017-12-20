@@ -264,13 +264,13 @@ ApplicationWindow {
                             Label {
                                 Layout.fillWidth: true
                                 text: model.artist
-                                color: '#66FF99'
+                                color: '#00ADDC'
                                 font.pixelSize: 32
                             }
                         }
                         //Label {
                         //    text: player.time2str(model.duration)
-                        //    color: '#66FF99'
+                        //    color: '#00ADDC'
                         //    font.pixelSize: 32
                         //}
                     }
