@@ -31,7 +31,7 @@
 
 int main(int argc, char *argv[])
 {
-    QString myname = QString("MediaPlayer");
+    QString myname = QString("Music");
 
     QGuiApplication app(argc, argv);
 
