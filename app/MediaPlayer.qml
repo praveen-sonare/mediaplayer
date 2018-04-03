@@ -24,9 +24,64 @@ import 'api' as API
 ApplicationWindow {
     id: root
 
-    API.MediaPlayer {
+    Item {
         id: player
-        url: bindingAddress
+
+        property string title: ""
+        property string album: ""
+        property string artist: ""
+
+        property int duration: 0
+        property int position: 0
+
+        property string cover_art: ""
+        property string status: ""
+
+        function time2str(value) {
+            return Qt.formatTime(new Date(value), 'mm:ss')
+        }
+    }
+
+    Connections {
+        target: mediaplayer
+
+        onPlaylistChanged: {
+            playlist_model.clear();
+
+            for (var i = 0; i < playlist.list.length; i++) {
+                var item = playlist.list[i]
+
+                playlist_model.append({ "index": item.index, "artist": item.artist ? item.artist : '', "title": item.title ? item.title : '' })
+
+                if (item.selected) {
+                    playlistview.currentIndex = i
+                }
+            }
+        }
+
+        onMetadataChanged: {
+            player.title = metadata.title
+            player.album = metadata.album
+            player.artist = metadata.artist
+
+            if (metadata.duration) {
+                player.duration = metadata.duration
+            }
+
+            if (metadata.position) {
+                player.position = metadata.position
+            }
+
+            if (metadata.status) {
+                player.status = metadata.status
+            }
+
+            if (metadata.image) {
+                player.cover_art = metadata.image
+            }
+
+            playlistview.currentIndex = metadata.index
+        }
     }
 
     API.BluetoothManager {
@@ -45,7 +100,7 @@ ApplicationWindow {
     }
 
     ListModel {
-        id: playlist
+        id: playlist_model
     }
 
     ColumnLayout {
@@ -94,10 +149,10 @@ ApplicationWindow {
                             ToggleButton {
                                 id: loop
                                 visible: bluetooth.connected == false
-                                checked: player.loop_state
+                                //checked: player.loop_state
                                 offImage: './images/AGL_MediaPlayer_Loop_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Loop_Active.svg'
-                                onClicked: { player.loop(checked) }
+                                onClicked: { mediaplayer.loop(checked) }
                             }
                         }
                         ColumnLayout {
@@ -144,7 +199,7 @@ ApplicationWindow {
                             font.pixelSize: 32
                             text: bluetooth.av_connected ? player.time2str(bluetooth.duration) : player.time2str(player.duration)
                         }
-                        onPressedChanged: player.seek(value)
+                        onPressedChanged: mediaplayer.seek(value)
                     }
                     RowLayout {
                         Layout.fillHeight: true
@@ -163,7 +218,7 @@ ApplicationWindow {
                                     bluetooth.sendMediaCommand("Previous")
                                     bluetooth.position = 0
                                 } else {
-                                    player.previous()
+                                    mediaplayer.previous()
                                 }
                             }
                         }
@@ -174,16 +229,19 @@ ApplicationWindow {
                                 if (bluetooth.av_connected) {
                                     bluetooth.sendMediaCommand("Play")
                                 } else {
-                                    player.play()
+                                    mediaplayer.play()
                                 }
                             }
                             states: [
                                 State {
-                                    when: player.running === true
+                                    when: player.status == "playing"
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
-                                        onClicked: player.pause()
+                                        onClicked: {
+                                            player.status = ""
+                                            mediaplayer.pause()
+                                        }
                                     }
                                 },
                                 State {
@@ -204,7 +262,7 @@ ApplicationWindow {
                                 if (bluetooth.av_connected) {
                                     bluetooth.sendMediaCommand("Next")
                                 } else {
-                                    player.next()
+                                    mediaplayer.next()
                                 }
                             }
                         }
@@ -244,7 +302,7 @@ ApplicationWindow {
                     text: 'PLAYLIST'
                     opacity: 0.5
                 }
-                model: playlist
+                model: playlist_model
                 currentIndex: -1
 
                 delegate: MouseArea {
@@ -275,8 +333,7 @@ ApplicationWindow {
                         //}
                     }
                     onClicked: {
-                        player.pick_track(playlistview.model.get(index).index)
-                        player.play()
+                        mediaplayer.picktrack(playlistview.model.get(index).index)
                     }
                 }
 
