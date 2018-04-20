@@ -66,10 +66,10 @@ WebSocket {
                 var address = ""
 
                 if (request.info == "BT - Scan Result is Displayed") {
-                    for (var i = 0; i < response.length; i++) {
-                        var data = response[i]
+                    for (var i = 0; i < response.list.length; i++) {
+                        var data = list.response[i]
                         if (data.Connected == "True" && data.UUIDs.indexOf(avrcp_uuid) >= 0) {
-                            address = response[i].Address
+                            address = data.Address
                             console.debug("Connected Device: " + address)
 
                             root.connected = true
