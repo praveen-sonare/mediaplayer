@@ -19,7 +19,6 @@ import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
 import QtMultimedia 5.6
 import AGL.Demo.Controls 1.0
-import 'api' as API
 
 ApplicationWindow {
     id: root
@@ -39,6 +38,91 @@ ApplicationWindow {
 
         function time2str(value) {
             return Qt.formatTime(new Date(value), 'mm:ss')
+        }
+    }
+
+    Item {
+        id: bluetooth
+
+        property string deviceAddress: ""
+        property bool connected: false
+        property bool av_connected: false
+
+        property int position: 0
+        property int duration: 0
+
+        property string artist: ""
+        property string title: ""
+        property string state: "stopped"
+
+        // AVRCP Target UUID
+        property string avrcp_uuid: "0000110e-0000-1000-8000-00805f9b34fb"
+
+        function connect_profiles() {
+            var address = bluetooth.deviceAddress;
+            bluetooth_connection.connect(address, "a2dp")
+            bluetooth_connection.connect(address, "avrcp")
+        }
+
+        function disconnect_profiles() {
+            var address = bluetooth.deviceAddress;
+            bluetooth_connection.disconnect(address, "a2dp")
+            bluetooth_connection.disconnect(address, "avrcp")
+        }
+
+        function set_avrcp_controls(cmd) {
+            bluetooth_connection.set_avrcp_controls(bluetooth.deviceAddress, cmd)
+        }
+    }
+
+    Connections {
+        target: bluetooth_connection
+
+        onDeviceListEvent: {
+            var address = ""
+            for (var i = 0; i < data.list.length; i++) {
+                var item = data.list[i]
+                if (item.Connected == "True" && item.UUIDs.indexOf(bluetooth.avrcp_uuid) >= 0) {
+                    address = item.Address
+
+                    bluetooth.connected = true
+                    mediaplayer.pause()
+
+                    //NOTE: This hack is here for when MediaPlayer is started
+                    //      with an existing connection.
+                    bluetooth.av_connected = item.AVPConnected == "True" 
+                }
+            }
+            if (!address)
+                bluetooth.connected = false
+            else
+                bluetooth.deviceAddress = address
+        }
+
+        onDeviceUpdatedEvent: {
+            var metadata = data.Metadata
+
+            if (data.Connected == "False")
+                return
+
+            bluetooth.connected = data.Connected == "True"
+            bluetooth.av_connected = data.AVPConnected == "True"
+            bluetooth.deviceAddress = data.Address
+
+            if ('Position' in metadata)
+                bluetooth.position = metadata.Position
+
+            if ('Duration' in metadata)
+                bluetooth.duration = metadata.Duration
+
+            if ('Status' in metadata)
+                bluetooth.state = metadata.Status
+
+            if ('Artist' in metadata)
+                bluetooth.artist = metadata.Artist
+
+            if ('Title' in metadata)
+                bluetooth.title = metadata.Title
         }
     }
 
@@ -82,11 +166,6 @@ ApplicationWindow {
 
             playlistview.currentIndex = metadata.index
         }
-    }
-
-    API.BluetoothManager {
-        id: bluetooth
-        url: bindingAddress
     }
 
     Timer {
@@ -215,7 +294,7 @@ ApplicationWindow {
                             offImage: './images/AGL_MediaPlayer_BackArrow.svg'
                             onClicked: {
                                 if (bluetooth.av_connected) {
-                                    bluetooth.sendMediaCommand("Previous")
+                                    bluetooth.set_avrcp_controls("Previous")
                                     bluetooth.position = 0
                                 } else {
                                     mediaplayer.previous()
@@ -227,7 +306,7 @@ ApplicationWindow {
                             offImage: './images/AGL_MediaPlayer_Player_Play.svg'
                             onClicked: {
                                 if (bluetooth.av_connected) {
-                                    bluetooth.sendMediaCommand("Play")
+                                    bluetooth.set_avrcp_controls("Play")
                                 } else {
                                     mediaplayer.play()
                                 }
@@ -249,7 +328,7 @@ ApplicationWindow {
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
-                                        onClicked: bluetooth.sendMediaCommand("Pause")
+                                        onClicked: bluetooth.set_avrcp_controls("Pause")
                                     }
                                 }
 
@@ -260,7 +339,7 @@ ApplicationWindow {
                             offImage: './images/AGL_MediaPlayer_ForwardArrow.svg'
                             onClicked: {
                                 if (bluetooth.av_connected) {
-                                    bluetooth.sendMediaCommand("Next")
+                                    bluetooth.set_avrcp_controls("Next")
                                 } else {
                                     mediaplayer.next()
                                 }
