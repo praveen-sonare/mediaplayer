@@ -28,6 +28,7 @@
 #include <QQuickWindow>
 #include <libhomescreen.hpp>
 #include <qlibwindowmanager.h>
+#include <bluetooth.h>
 #include <mediaplayer.h>
 
 int main(int argc, char *argv[])
@@ -96,6 +97,7 @@ int main(int argc, char *argv[])
         });
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress));
+        context->setContextProperty("bluetooth_connection", new Bluetooth(bindingAddress));
         engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
         QObject *root = engine.rootObjects().first();
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
