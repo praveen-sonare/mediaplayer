@@ -130,7 +130,7 @@ ApplicationWindow {
         target: mediaplayer
 
         onPlaylistChanged: {
-            playlist.clear()
+            playlist_model.clear();
 
             for (var i = 0; i < playlist.list.length; i++) {
                 var item = playlist.list[i]
