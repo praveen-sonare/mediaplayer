@@ -17,7 +17,6 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.0
-import QtMultimedia 5.6
 import AGL.Demo.Controls 1.0
 
 ApplicationWindow {
