@@ -104,6 +104,9 @@ ApplicationWindow {
             if (data.Connected == "False")
                 return
 
+            if (!bluetooth.av_connected && data.AVPConnected == "True")
+                mediaplayer.pause()
+
             bluetooth.connected = data.Connected == "True"
             bluetooth.av_connected = data.AVPConnected == "True"
             bluetooth.deviceAddress = data.Address
