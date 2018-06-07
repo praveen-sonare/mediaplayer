@@ -31,6 +31,8 @@
 #include <bluetooth.h>
 #include <mediaplayer.h>
 
+#include <unistd.h>
+
 int main(int argc, char *argv[])
 {
     QString myname = QString("MediaPlayer");
@@ -98,6 +100,9 @@ int main(int argc, char *argv[])
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress));
         context->setContextProperty("bluetooth_connection", new Bluetooth(bindingAddress));
+
+        usleep(300000);
+
         engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
         QObject *root = engine.rootObjects().first();
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
