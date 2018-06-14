@@ -33,7 +33,7 @@ ApplicationWindow {
         property int position: 0
 
         property string cover_art: ""
-        property string status: ""
+        property string status: "stopped"
 
         function time2str(value) {
             return Qt.formatTime(new Date(value), 'mm:ss')
@@ -104,8 +104,10 @@ ApplicationWindow {
             if (data.Connected == "False")
                 return
 
-            if (!bluetooth.av_connected && data.AVPConnected == "True")
+            if (!bluetooth.av_connected && data.AVPConnected == "True") {
                 mediaplayer.pause()
+                player.status = "stopped"
+            }
 
             bluetooth.connected = data.Connected == "True"
             bluetooth.av_connected = data.AVPConnected == "True"
@@ -305,22 +307,14 @@ ApplicationWindow {
                         }
                         ImageButton {
                             id: play
-                            offImage: './images/AGL_MediaPlayer_Player_Play.svg'
-                            onClicked: {
-                                if (bluetooth.av_connected) {
-                                    bluetooth.set_avrcp_controls("Play")
-                                } else {
-                                    mediaplayer.play()
-                                }
-                            }
                             states: [
                                 State {
-                                    when: player.status == "playing"
+                                    when: !bluetooth.av_connected && player.status == "playing"
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
                                         onClicked: {
-                                            player.status = ""
+                                            player.status = "stopped"
                                             mediaplayer.pause()
                                         }
                                     }
@@ -332,8 +326,23 @@ ApplicationWindow {
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
                                         onClicked: bluetooth.set_avrcp_controls("Pause")
                                     }
+                                },
+                                State {
+                                    when: !bluetooth.av_connected && player.status != "playing"
+                                    PropertyChanges {
+                                        target: play
+                                        offImage: './images/AGL_MediaPlayer_Player_Play.svg'
+                                        onClicked: mediaplayer.play()
+                                    }
+                                },
+                                State {
+                                    when: bluetooth.av_connected && bluetooth.state != "playing"
+                                    PropertyChanges {
+                                        target: play
+                                        offImage: './images/AGL_MediaPlayer_Player_Play.svg'
+                                        onClicked: bluetooth.set_avrcp_controls("Play")
+                                    }
                                 }
-
                             ]
                         }
                         ImageButton {
