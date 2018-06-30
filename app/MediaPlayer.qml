@@ -133,20 +133,6 @@ ApplicationWindow {
     Connections {
         target: mediaplayer
 
-        onPlaylistChanged: {
-            playlist_model.clear();
-
-            for (var i = 0; i < playlist.list.length; i++) {
-                var item = playlist.list[i]
-
-                playlist_model.append({ "index": item.index, "artist": item.artist ? item.artist : '', "title": item.title ? item.title : '' })
-
-                if (item.selected) {
-                    playlistview.currentIndex = i
-                }
-            }
-        }
-
         onMetadataChanged: {
             player.title = metadata.title
             player.album = metadata.album
@@ -180,10 +166,6 @@ ApplicationWindow {
         onTriggered: {
             bluetooth.position = bluetooth.position + 250
         }
-    }
-
-    ListModel {
-        id: playlist_model
     }
 
     ColumnLayout {
@@ -392,7 +374,7 @@ ApplicationWindow {
                     text: 'PLAYLIST'
                     opacity: 0.5
                 }
-                model: playlist_model
+                model: MediaplayerModel
                 currentIndex: -1
 
                 delegate: MouseArea {
@@ -423,7 +405,7 @@ ApplicationWindow {
                         //}
                     }
                     onClicked: {
-                        mediaplayer.picktrack(playlistview.model.get(index).index)
+                        mediaplayer.picktrack(playlistview.model[index].index)
                     }
                 }
 

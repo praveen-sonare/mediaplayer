@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
             }
         });
 
-        context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress));
+        context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
         context->setContextProperty("bluetooth_connection", new Bluetooth(bindingAddress));
 
         usleep(300000);
