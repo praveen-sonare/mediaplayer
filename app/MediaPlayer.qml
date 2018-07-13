@@ -134,9 +134,9 @@ ApplicationWindow {
         target: mediaplayer
 
         onMetadataChanged: {
-            player.title = metadata.title
-            player.album = metadata.album
-            player.artist = metadata.artist
+            player.title = metadata.title ? metadata.title : ""
+            player.album = metadata.album ? metadata.album : ""
+            player.artist = metadata.artist ? metadata.artist : ""
 
             if (metadata.duration) {
                 player.duration = metadata.duration
