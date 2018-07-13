@@ -1,1 +1,4 @@
 *.pro.*
+build/
+build-*/
+
