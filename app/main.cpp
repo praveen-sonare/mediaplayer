@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
         if(qwm->init(port,secret) != 0){
             exit(EXIT_FAILURE);
         }
+        AGLScreenInfo screenInfo(qwm->get_scale_factor());
         // Request a surface as described in layers.json windowmanager’s file
         if (qwm->requestSurface(myname) != 0) {
             exit(EXIT_FAILURE);
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
         context->setContextProperty("bluetooth_connection", new Bluetooth(bindingAddress));
+        context->setContextProperty(QStringLiteral("screenInfo"), &screenInfo);
 
         usleep(300000);
 

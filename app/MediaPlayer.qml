@@ -22,6 +22,9 @@ import AGL.Demo.Controls 1.0
 ApplicationWindow {
     id: root
 
+    width: container.width * container.scale
+    height: container.height * container.scale
+
     Item {
         id: player
 
@@ -167,6 +170,13 @@ ApplicationWindow {
             bluetooth.position = bluetooth.position + 250
         }
     }
+
+    Item {
+        id: container
+        anchors.centerIn: parent
+        width: 1080
+        height: 1487
+        scale: screenInfo.scale_factor()
 
     ColumnLayout {
         anchors.fill: parent
@@ -416,4 +426,5 @@ ApplicationWindow {
             }
         }
     }
+}
 }
