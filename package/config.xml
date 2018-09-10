@@ -10,7 +10,6 @@
     <param name="windowmanager" value="ws" />
     <param name="homescreen" value="ws" />
     <param name="mediaplayer" value="ws" />
-    <param name="Bluetooth-Manager" value="ws" />
   </feature>
   <feature name="urn:AGL:widget:required-permission">
     <param name="urn:AGL:permission::public:no-htdocs" value="required" />
