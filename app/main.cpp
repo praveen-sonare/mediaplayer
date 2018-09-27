@@ -87,16 +87,17 @@ int main(int argc, char *argv[])
         hs->init(port, token.c_str());
         // Set the event handler for Event_TapShortcut which will activate the surface for windowmanager
         hs->set_event_handler(LibHomeScreen::Event_TapShortcut, [qwm, myname](json_object *object){
-            json_object *appnameJ = nullptr;
-            if(json_object_object_get_ex(object, "application_name", &appnameJ))
-            {
-                const char *appname = json_object_get_string(appnameJ);
-                if(myname == appname)
-                {
-                    qDebug("Surface %s got tapShortcut\n", appname);
+//            json_object *appnameJ = nullptr;
+//            if(json_object_object_get_ex(object, "application_name", &appnameJ))
+//            {
+//                const char *appname = json_object_get_string(appnameJ);
+//                if(myname == appname)
+//                {
+//                    qDebug("Surface %s got tapShortcut\n", appname);
+                    qDebug("Surface %s got tapShortcut\n", myname);
                     qwm->activateSurface(myname);
-                }
-            }
+//                }
+//            }
         });
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
