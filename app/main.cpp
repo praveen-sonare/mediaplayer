@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         hs->init(port, token.c_str());
         // Set the event handler for Event_TapShortcut which will activate the surface for windowmanager
         hs->set_event_handler(LibHomeScreen::Event_TapShortcut, [qwm, myname](json_object *object){
-            qDebug("Surface %s got tapShortcut\n", myname);
+            qDebug("Surface %s got tapShortcut\n", myname.toStdString().c_str());
             qwm->activateSurface(myname);
         });
 
