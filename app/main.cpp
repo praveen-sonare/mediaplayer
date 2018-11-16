@@ -28,7 +28,6 @@
 #include <QQuickWindow>
 #include <libhomescreen.hpp>
 #include <qlibwindowmanager.h>
-#include <bluetooth.h>
 #include <mediaplayer.h>
 
 #include <unistd.h>
@@ -92,7 +91,6 @@ int main(int argc, char *argv[])
         });
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
-        context->setContextProperty("bluetooth_connection", new Bluetooth(bindingAddress));
         context->setContextProperty(QStringLiteral("screenInfo"), &screenInfo);
 
         usleep(300000);

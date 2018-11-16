@@ -32,6 +32,8 @@ ApplicationWindow {
         property string album: ""
         property string artist: ""
 
+        property bool av_connected: false
+
         property int duration: 0
         property int position: 0
 
@@ -43,131 +45,48 @@ ApplicationWindow {
         }
     }
 
-    Item {
-        id: bluetooth
-
-        property string deviceAddress: ""
-        property bool connected: false
-        property bool av_connected: false
-
-        property int position: 0
-        property int duration: 0
-
-        property string artist: ""
-        property string title: ""
-        property string state: "stopped"
-
-        // AVRCP Target UUID
-        property string avrcp_uuid: "0000110e-0000-1000-8000-00805f9b34fb"
-
-        function connect_profiles() {
-            var address = bluetooth.deviceAddress;
-            bluetooth_connection.connect(address, "a2dp")
-            bluetooth_connection.connect(address, "avrcp")
-        }
-
-        function disconnect_profiles() {
-            var address = bluetooth.deviceAddress;
-            bluetooth_connection.disconnect(address, "a2dp")
-            bluetooth_connection.disconnect(address, "avrcp")
-        }
-
-        function set_avrcp_controls(cmd) {
-            bluetooth_connection.set_avrcp_controls(bluetooth.deviceAddress, cmd)
-        }
-    }
-
-    Connections {
-        target: bluetooth_connection
-
-        onDeviceListEvent: {
-            var address = ""
-            for (var i = 0; i < data.list.length; i++) {
-                var item = data.list[i]
-                if (item.Connected == "True" && item.UUIDs.indexOf(bluetooth.avrcp_uuid) >= 0) {
-                    address = item.Address
-
-                    bluetooth.connected = true
-                    mediaplayer.pause()
-
-                    //NOTE: This hack is here for when MediaPlayer is started
-                    //      with an existing connection.
-                    bluetooth.av_connected = item.AVPConnected == "True" 
-                }
-            }
-            if (!address)
-                bluetooth.connected = false
-            else
-                bluetooth.deviceAddress = address
-        }
-
-        onDeviceUpdatedEvent: {
-            var metadata = data.Metadata
-
-            if (data.Connected == "False")
-                return
-
-            if (!bluetooth.av_connected && data.AVPConnected == "True") {
-                mediaplayer.pause()
-                player.status = "stopped"
-            }
-
-            bluetooth.connected = data.Connected == "True"
-            bluetooth.av_connected = data.AVPConnected == "True"
-            bluetooth.deviceAddress = data.Address
-
-            if ('Position' in metadata)
-                bluetooth.position = metadata.Position
-
-            if ('Duration' in metadata)
-                bluetooth.duration = metadata.Duration
-
-            if ('Status' in metadata)
-                bluetooth.state = metadata.Status
-
-            if ('Artist' in metadata)
-                bluetooth.artist = metadata.Artist
-
-            if ('Title' in metadata)
-                bluetooth.title = metadata.Title
-        }
-    }
-
     Connections {
         target: mediaplayer
 
         onMetadataChanged: {
-            player.title = metadata.title
-            player.album = metadata.album
-            player.artist = metadata.artist
+            var track = metadata.track
 
-            if (metadata.duration) {
-                player.duration = metadata.duration
-            }
-
-            if (metadata.position) {
-                player.position = metadata.position
-            }
-
-            if (metadata.status) {
+            if ('status' in metadata) {
                 player.status = metadata.status
             }
 
-            if (metadata.image) {
-                player.cover_art = metadata.image
+            if ('connected' in metadata) {
+                player.av_connected = metadata.connected
             }
 
-            playlistview.currentIndex = metadata.index
+            if ('position' in metadata) {
+                player.position = metadata.position
+            }
+
+            if (track) {
+                if ('image' in track) {
+                     player.cover_art = track.image
+                }
+
+                player.title = track.title
+                player.album = track.album
+                player.artist = track.artist
+                player.duration = track.duration
+
+                if ('index' in track) {
+                     playlistview.currentIndex = track.index
+                }
+            }
         }
     }
 
     Timer {
         id: timer
         interval: 250
-        running: (bluetooth.av_connected && bluetooth.state == "playing")
+        running: player.av_connected && player.status == "playing"
         repeat: true
         onTriggered: {
-            bluetooth.position = bluetooth.position + 250
+            player.position = player.position + 250
         }
     }
 
@@ -193,7 +112,7 @@ ApplicationWindow {
                 height: sourceSize.height * width / sourceSize.width
                 fillMode: Image.PreserveAspectCrop
                 source: player.cover_art ? player.cover_art : ''
-                visible: bluetooth.av_connected == false
+                visible: player.av_connected === false
             }
 
             Item {
@@ -223,8 +142,7 @@ ApplicationWindow {
                             //}
                             ToggleButton {
                                 id: loop
-                                visible: bluetooth.connected == false
-                                //checked: player.loop_state
+                                visible: player.av_connected === false
                                 offImage: './images/AGL_MediaPlayer_Loop_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Loop_Active.svg'
                                 onClicked: { mediaplayer.loop(checked) }
@@ -235,13 +153,13 @@ ApplicationWindow {
                             Label {
                                 id: title
                                 Layout.alignment: Layout.Center
-                                text: bluetooth.av_connected ? bluetooth.title : (player.title ? player.title : '')
+                                text: player.title
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                             }
                             Label {
                                 Layout.alignment: Layout.Center
-                                text: bluetooth.av_connected ? bluetooth.artist : (player.artist ? player.artist : '')
+                                text: player.artist
                                 horizontalAlignment: Label.AlignHCenter
                                 verticalAlignment: Label.AlignVCenter
                                 font.pixelSize: title.font.pixelSize * 0.6
@@ -251,28 +169,22 @@ ApplicationWindow {
                     Slider {
                         id: slider
                         Layout.fillWidth: true
-                        to: bluetooth.av_connected ? bluetooth.duration : player.duration
-                        enabled: bluetooth.av_connected == false
-                        value: bluetooth.av_connected ? bluetooth.position : player.position
-                        function getPosition() {
-                            if (bluetooth.av_connected) {
-                                return player.time2str(bluetooth.position)
-                            }
-                            return player.time2str(player.position)
-                        }
+                        to: player.duration
+                        enabled: player.av_connected === false
+                        value: player.position
                         Label {
                             id: position
                             anchors.left: parent.left
                             anchors.bottom: parent.top
                             font.pixelSize: 32
-                            text: slider.getPosition()
+                            text: player.time2str(player.position)
                         }
                         Label {
                             id: duration
                             anchors.right: parent.right
                             anchors.bottom: parent.top
                             font.pixelSize: 32
-                            text: bluetooth.av_connected ? player.time2str(bluetooth.duration) : player.time2str(player.duration)
+                            text: player.time2str(player.duration)
                         }
                         onPressedChanged: mediaplayer.seek(value)
                     }
@@ -289,19 +201,14 @@ ApplicationWindow {
                             id: previous
                             offImage: './images/AGL_MediaPlayer_BackArrow.svg'
                             onClicked: {
-                                if (bluetooth.av_connected) {
-                                    bluetooth.set_avrcp_controls("Previous")
-                                    bluetooth.position = 0
-                                } else {
-                                    mediaplayer.previous()
-                                }
+                                mediaplayer.previous()
                             }
                         }
                         ImageButton {
                             id: play
                             states: [
                                 State {
-                                    when: !bluetooth.av_connected && player.status == "playing"
+                                    when: player.status == "playing"
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
@@ -312,27 +219,11 @@ ApplicationWindow {
                                     }
                                 },
                                 State {
-                                    when: bluetooth.av_connected && bluetooth.state == "playing"
-                                    PropertyChanges {
-                                        target: play
-                                        offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
-                                        onClicked: bluetooth.set_avrcp_controls("Pause")
-                                    }
-                                },
-                                State {
-                                    when: !bluetooth.av_connected && player.status != "playing"
+                                    when: player.status != "playing"
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Play.svg'
                                         onClicked: mediaplayer.play()
-                                    }
-                                },
-                                State {
-                                    when: bluetooth.av_connected && bluetooth.state != "playing"
-                                    PropertyChanges {
-                                        target: play
-                                        offImage: './images/AGL_MediaPlayer_Player_Play.svg'
-                                        onClicked: bluetooth.set_avrcp_controls("Play")
                                     }
                                 }
                             ]
@@ -341,29 +232,18 @@ ApplicationWindow {
                             id: forward
                             offImage: './images/AGL_MediaPlayer_ForwardArrow.svg'
                             onClicked: {
-                                if (bluetooth.av_connected) {
-                                    bluetooth.set_avrcp_controls("Next")
-                                } else {
-                                    mediaplayer.next()
-                                }
+                                mediaplayer.next()
                             }
                         }
 
                         Item { Layout.fillWidth: true }
  
                         ToggleButton {
-                              visible: bluetooth.connected
-                              checked: bluetooth.av_connected
+                              visible: true
+                              enabled: false
+                              checked: player.av_connected
                               offImage: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
                               onImage: './images/AGL_MediaPlayer_Bluetooth_Active.svg'
-
-                              onClicked: {
-                                  if (bluetooth.av_connected) {
-                                      bluetooth.disconnect_profiles()
-                                  } else {
-                                      bluetooth.connect_profiles()
-                                  }
-                              }
                         }
                     }
                 }
@@ -377,7 +257,7 @@ ApplicationWindow {
             ListView {
                 anchors.fill: parent
                 id: playlistview
-                visible: bluetooth.av_connected == false
+                visible: player.av_connected === false
                 clip: true
                 header: Label {
                     x: 50
