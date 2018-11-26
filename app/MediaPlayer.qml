@@ -242,6 +242,12 @@ ApplicationWindow {
                               visible: true
                               enabled: false
                               checked: player.av_connected
+                              onClicked: {
+                                if (checked)
+                                        mediaplayer.disconnect()
+                                else
+                                        mediaplayer.connected()
+                              }
                               offImage: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
                               onImage: './images/AGL_MediaPlayer_Bluetooth_Active.svg'
                         }
