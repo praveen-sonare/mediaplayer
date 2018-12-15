@@ -59,10 +59,6 @@ ApplicationWindow {
                 player.av_connected = metadata.connected
             }
 
-            if ('position' in metadata) {
-                player.position = metadata.position
-            }
-
             if (track) {
                 if ('image' in track) {
                      player.cover_art = track.image
@@ -76,6 +72,10 @@ ApplicationWindow {
                 if ('index' in track) {
                      playlistview.currentIndex = track.index
                 }
+            }
+
+            if ('position' in metadata) {
+                player.position = metadata.position
             }
         }
     }
@@ -213,7 +213,6 @@ ApplicationWindow {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Pause.svg'
                                         onClicked: {
-                                            player.status = "stopped"
                                             mediaplayer.pause()
                                         }
                                     }
@@ -247,8 +246,9 @@ ApplicationWindow {
                                 else
                                         mediaplayer.disconnect()
                               }
-                              offImage: './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
-                              onImage: './images/AGL_MediaPlayer_Bluetooth_Active.svg'
+                              contentItem: Image {
+                                source: player.av_connected ? './images/AGL_MediaPlayer_Bluetooth_Active.svg' : './images/AGL_MediaPlayer_Bluetooth_Inactive.svg'
+                              }
                         }
                     }
                 }
