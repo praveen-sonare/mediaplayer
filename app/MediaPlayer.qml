@@ -37,7 +37,6 @@ ApplicationWindow {
         property int duration: 0
         property int position: 0
 
-        property string cover_art: ""
         property string status: "stopped"
 
         function time2str(value) {
@@ -60,10 +59,6 @@ ApplicationWindow {
             }
 
             if (track) {
-                if ('image' in track) {
-                     player.cover_art = track.image
-                }
-
                 player.title = track.title
                 player.album = track.album
                 player.artist = track.artist
@@ -105,13 +100,12 @@ ApplicationWindow {
             Layout.preferredHeight: 1080
             clip: true
             Image {
-                id: albumart
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 height: sourceSize.height * width / sourceSize.width
                 fillMode: Image.PreserveAspectCrop
-                source: player.cover_art ? player.cover_art : ''
+                source: AlbumArt
                 visible: player.av_connected === false
             }
 

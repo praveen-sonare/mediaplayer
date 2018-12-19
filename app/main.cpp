@@ -93,8 +93,6 @@ int main(int argc, char *argv[])
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
         context->setContextProperty(QStringLiteral("screenInfo"), &screenInfo);
 
-        usleep(300000);
-
         engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
         QObject *root = engine.rootObjects().first();
         QQuickWindow *window = qobject_cast<QQuickWindow *>(root);
