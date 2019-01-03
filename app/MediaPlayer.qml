@@ -195,6 +195,7 @@ ApplicationWindow {
                             id: previous
                             offImage: './images/AGL_MediaPlayer_BackArrow.svg'
                             onClicked: {
+                                radio.stop()
                                 mediaplayer.previous()
                             }
                         }
@@ -216,7 +217,10 @@ ApplicationWindow {
                                     PropertyChanges {
                                         target: play
                                         offImage: './images/AGL_MediaPlayer_Player_Play.svg'
-                                        onClicked: mediaplayer.play()
+                                        onClicked: {
+                                            radio.stop()
+                                            mediaplayer.play()
+                                        }
                                     }
                                 }
                             ]
@@ -225,6 +229,7 @@ ApplicationWindow {
                             id: forward
                             offImage: './images/AGL_MediaPlayer_ForwardArrow.svg'
                             onClicked: {
+                                radio.stop()
                                 mediaplayer.next()
                             }
                         }
@@ -294,6 +299,7 @@ ApplicationWindow {
                         //}
                     }
                     onClicked: {
+                        radio.stop()
                         mediaplayer.picktrack(playlistview.model[index].index)
                     }
                 }

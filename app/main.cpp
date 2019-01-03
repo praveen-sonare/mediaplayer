@@ -29,6 +29,7 @@
 #include <libhomescreen.hpp>
 #include <qlibwindowmanager.h>
 #include <mediaplayer.h>
+#include <radio.h>
 
 #include <unistd.h>
 
@@ -99,6 +100,7 @@ int main(int argc, char *argv[])
         });
 
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
+        context->setContextProperty("radio", new Radio(bindingAddress, context));
         context->setContextProperty(QStringLiteral("screenInfo"), &screenInfo);
 
         engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
