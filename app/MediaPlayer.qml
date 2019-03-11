@@ -139,7 +139,7 @@ ApplicationWindow {
                                 visible: player.av_connected === false
                                 offImage: './images/AGL_MediaPlayer_Loop_Inactive.svg'
                                 onImage: './images/AGL_MediaPlayer_Loop_Active.svg'
-                                onClicked: { mediaplayer.loop(checked) }
+                                onClicked: { mediaplayer.loop(checked ? "playlist" : "off") }
                             }
                         }
                         ColumnLayout {
