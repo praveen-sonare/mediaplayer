@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
             qwm->activateWindow(graphic_role);
         });
 
+        context->setContextProperty("AlbumArt", "");
         context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
         context->setContextProperty(QStringLiteral("screenInfo"), &screenInfo);
 
