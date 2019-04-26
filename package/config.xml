@@ -13,5 +13,6 @@
   </feature>
   <feature name="urn:AGL:widget:required-permission">
     <param name="urn:AGL:permission::public:no-htdocs" value="required" />
+    <param name="urn:AGL:permission::public:display" value="required" />
   </feature>
 </widget>
