@@ -40,7 +40,7 @@ ApplicationWindow {
         property string status: "stopped"
 
         function time2str(value) {
-            return Qt.formatTime(new Date(value), 'mm:ss')
+            return Qt.formatTime(new Date(value), (value > 3600000) ? 'hh:mm:ss' : 'mm:ss')
         }
     }
 
