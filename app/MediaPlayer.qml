@@ -59,6 +59,8 @@ ApplicationWindow {
             }
 
             if (track) {
+                if ('image' in track)
+                     return
                 player.title = track.title
                 player.album = track.album
                 player.artist = track.artist
