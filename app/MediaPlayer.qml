@@ -64,7 +64,9 @@ ApplicationWindow {
                 player.title = track.title
                 player.album = track.album
                 player.artist = track.artist
-                player.duration = track.duration
+
+                if ('duration' in track)
+                     player.duration = track.duration
 
                 if ('index' in track) {
                      playlistview.currentIndex = track.index
