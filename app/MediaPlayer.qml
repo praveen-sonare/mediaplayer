@@ -100,6 +100,7 @@ ApplicationWindow {
 
     ColumnLayout {
         anchors.fill: parent
+
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -235,6 +236,15 @@ ApplicationWindow {
                             }
                         }
 
+			// added button to simulate a close
+                        ImageButton {
+                            id: nforward
+                            offImage: './images/AGL_MediaPlayer_ForwardArrow.svg'
+                            onClicked: {
+				Qt.quit()
+                            }
+                        }
+
                         Item { Layout.fillWidth: true }
  
                         ToggleButton {
@@ -312,4 +322,5 @@ ApplicationWindow {
         }
     }
 }
+
 }
