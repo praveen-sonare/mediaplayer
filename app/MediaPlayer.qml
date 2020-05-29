@@ -17,8 +17,7 @@
 import QtQuick 2.11
 import QtQuick.Layouts 1.11
 import QtQuick.Controls 2.4
-
-import QtQuick.Window 2.11
+import QtQuick.Window 2.13
 
 import AGL.Demo.Controls 1.0
 
@@ -95,8 +94,8 @@ ApplicationWindow {
     Item {
         id: container
         anchors.centerIn: parent
-        width: Screen.width
-        height: Screen.height
+        width: Window.width
+	height: Window.height
         //scale: screenInfo.scale_factor()
         scale: 1
 
