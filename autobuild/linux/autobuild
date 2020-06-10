@@ -1,12 +1,13 @@
 #!/usr/bin/make -f
 # Copyright (C) 2015 - 2018 "IoT.bzh"
+# Copyright (C) 2020 Konsulko Group
 # Author "Romain Forlot" <romain.forlot@iot.bzh>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#        http://www.apache.org/licenses/LICENSE-2.0
+#	 http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,87 +16,95 @@
 # limitations under the License.
 
 THISFILE  := $(lastword $(MAKEFILE_LIST))
-BUILD_DIR := $(abspath $(dir $(THISFILE))/../../build)
-BUILD_DIR_TEST := $(abspath $(dir $(THISFILE))/../../build-test)
-BUILD_DIR_DEBUG := $(abspath $(dir $(THISFILE))/../../build-debug)
-BUILD_DIR_COVERAGE := $(abspath $(dir $(THISFILE))/../../build-coverage)
-DEST      := ${BUILD_DIR}
+ROOT_DIR := $(abspath $(dir $(THISFILE))/../..)
 
-.PHONY: all clean distclean configure build package help configure-debug configure-coverage build-debug build-coverage package-test package-debug package-coverage package-debug package-all
+# Build directories
+# Note that the debug directory is defined in relation to the release
+# directory (BUILD_DIR), this needs to be kept in mind if over-riding
+# it and building that widget types, the specific widget type variable
+# (e.g. BUILD_DIR_DEBUG) may also need to be specified to yield the
+# desired output hierarchy.
+BUILD_DIR = $(ROOT_DIR)/build
+BUILD_DIR_DEBUG = $(abspath $(BUILD_DIR)/../build-debug)
 
-all: help
+# Output directory variable for use in pattern rules.
+# This is intended for internal use only, hence the explicit override
+# definition.
+override OUTPUT_DIR = $(BUILD_DIR)
+
+# Final install directory for widgets
+DEST = $(OUTPUT_DIR)
+
+# Default build type for release builds
+BUILD_TYPE = release
+
+.PHONY: all help update install distclean
+.PHONY: clean clean-release clean-debug clean-all
+.PHONY: configure configure-release configure-debug
+.PHONY: build build-release build-debug build-all
+.PHONY: package package-release package-debug package-all
 
 help:
 	@echo "List of targets available:"
 	@echo ""
 	@echo "- all"
+	@echo "- help"
 	@echo "- clean"
 	@echo "- distclean"
 	@echo "- configure"
-	@echo "- build: compilation, link and prepare files for package into a widget" 
+	@echo "- build: compilation, link and prepare files for package into a widget"
 	@echo "- package: output a widget file '*.wgt'"
-	@echo "- install: install in your defined DEST directory"
+	@echo "- install: install in $(DEST) directory"
 	@echo ""
 	@echo "Usage: ./autobuild/agl/autobuild package DEST=${HOME}/opt"
-	@echo "Don't use your build dir as DEST as wgt file is generated at this location" 
+	@echo "Don't use your build dir as DEST as wgt file is generated at this location"
 
- clean:
-	@([ -d ${BUILD_DIR} ] && make -C ${BUILD_DIR} ${CLEAN_ARGS} clean) || echo Nothing to clean
+all: package-all
 
-distclean:
-	@[ -d ${DEST} ] && find ${DEST} -name "*.wgt" -delete
-	@([ -d ${BUILD_DIR} ] && make -C ${BUILD_DIR} distclean) || echo Nothing to distclean
+# Target specific variable over-rides so static pattern rules can be
+# used for the various type-specific targets.
 
-configure:
-	@[ -d ${BUILD_DIR} ] || mkdir -p ${BUILD_DIR}
-	@[ -f ${BUILD_DIR}/Makefile ] || (cd ${BUILD_DIR} && qmake ${CONFIGURE_ARGS} ..)
-configure-test:
-	@[ -d ${BUILD_DIR_TEST} ] || mkdir -p ${BUILD_DIR_TEST}
-	@[ -f ${BUILD_DIR_TEST}/Makefile ] || (cd ${BUILD_DIR_TEST} && qmake ${CONFIGURE_ARGS} ..)
+configure-debug build-debug package-debug clean-debug: OUTPUT_DIR = $(BUILD_DIR_DEBUG)
+configure-debug build-debug package-debug: BUILD_TYPE = debug
 
-configure-debug:
-	@[ -d ${BUILD_DIR_DEBUG} ] || mkdir -p ${BUILD_DIR_DEBUG}
-	@[ -f ${BUILD_DIR_DEBUG}/Makefile ] || (cd ${BUILD_DIR_DEBUG} && qmake ${CONFIGURE_ARGS} ..)
+clean-release clean-debug:
+	@if [ -d $(OUTPUT_DIR) ]; then \
+		$(MAKE) -C $(OUTPUT_DIR) $(CLEAN_ARGS) clean; \
+	else \
+		echo Nothing to clean; \
+	fi
 
-configure-coverage:
-	@[ -d ${BUILD_DIR_COVERAGE} ] || mkdir -p ${BUILD_DIR_COVERAGE}
-	@[ -f ${BUILD_DIR_COVERAGE}/Makefile ] || (cd ${BUILD_DIR_COVERAGE} && qmake ${CONFIGURE_ARGS} ..)
+clean: clean-release
 
-build: configure
-	@make -C ${BUILD_DIR} ${BUILD_ARGS} all
-build-test: configure-test
-	@make -C ${BUILD_DIR_TEST} ${BUILD_ARGS} all
+clean-all: clean-release clean-debug
 
-build-debug: configure-debug
-	@make -C ${BUILD_DIR_DEBUG} ${BUILD_ARGS} all
+distclean: clean-all
 
-build-coverage: configure-coverage
-	@make -C ${BUILD_DIR_COVERAGE} ${BUILD_ARGS} all
+configure-release configure-debug:
+	@mkdir -p $(OUTPUT_DIR)
+	@if [ ! -f $(OUTPUT_DIR)/Makefile ]; then \
+		(cd $(OUTPUT_DIR) && qmake CONFIG+=$(BUILD_TYPE) $(CONFIGURE_ARGS) $(ROOT_DIR)); \
+	fi
+
+configure: configure-release
+
+build-release build-debug: build-%: configure-%
+	@$(MAKE) -C $(OUTPUT_DIR) $(BUILD_ARGS) all
+
+build: build-release
+
+build-all: build-release build-debug
+
+package-release package-debug: package-%: build-%
+	@cp $(OUTPUT_DIR)/package/*.wgt $(OUTPUT_DIR)/
+	@if [ "$(abspath $(DEST))" != "$(abspath $(OUTPUT_DIR))" ]; then \
+		mkdir -p $(DEST) && cp $(OUTPUT_DIR)/*.wgt $(DEST); \
+	fi
+
+
+package: package-release
+
+package-all: package-release package-debug
 
 install: build
-	@if [ "${DEST}" != "${BUILD_DIR}" ]; then \
-		mkdir -p ${DEST} && cp -rf ${BUILD_DIR}/package/root/* ${DEST}; \
-	fi
-
-package: build
-	@if [ "${DEST}" != "${BUILD_DIR}/$@" ]; then \
-		mkdir -p ${DEST} && cp ${BUILD_DIR}/$@/*.wgt ${DEST}; \
-	fi
-
-package-test: build-test
-	@if [ "${DEST}" != "${BUILD_DIR_TEST}/$@" ]; then \
-		mkdir -p ${DEST} && cp ${BUILD_DIR_TEST}/package/*.wgt ${DEST}; \
-	fi
-
-package-debug: build-debug
-	@if [ "${DEST}" != "${BUILD_DIR_DEBUG}/package" ]; then \
-		mkdir -p ${DEST} && cp ${BUILD_DIR_DEBUG}/package/*.wgt ${DEST}; \
-	fi
-
-package-coverage: build-coverage
-	@if [ "${DEST}" != "${BUILD_DIR_COVERAGE}/package" ]; then \
-		mkdir -p ${DEST} && cp ${BUILD_DIR_COVERAGE}/package/*.wgt ${DEST}; \
-	fi
-
-package-all: package package-test package-coverage package-debug
-
+	@$(MAKE) -C $(BUILD_DIR) $(INSTALL_ARGS) install
