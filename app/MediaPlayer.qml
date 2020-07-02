@@ -94,10 +94,9 @@ ApplicationWindow {
     Item {
         id: container
         anchors.centerIn: parent
-        width: Window.width
-	height: Window.height
-        //scale: screenInfo.scale_factor()
-        scale: 1
+        height: 1920 - 215 - 218
+	width: 1080
+        scale: (Screen.width/ 1080.0)
 
     ColumnLayout {
         anchors.fill: parent
