@@ -257,7 +257,7 @@ ApplicationWindow {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: container.height / 2
+            Layout.preferredHeight: 407
 
             ListView {
                 anchors.fill: parent
