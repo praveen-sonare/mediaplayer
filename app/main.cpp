@@ -15,11 +15,7 @@
  * limitations under the License.
  */
 
-#include <QtCore/QCommandLineParser>
 #include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QStandardPaths>
-#include <QtCore/QUrlQuery>
 #include <QtGui/QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
@@ -34,39 +30,16 @@
 int main(int argc, char *argv[])
 {
     QString graphic_role = QString("music");
-
     QGuiApplication app(argc, argv);
 
     QQuickStyle::setStyle("AGL");
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
+    context->setContextProperty("AlbumArt", "");
+    context->setContextProperty("mediaplayer", new Mediaplayer(context));
 
-    QCommandLineParser parser;
-    parser.addPositionalArgument("port", app.translate("main", "port for binding"));
-    parser.addPositionalArgument("secret", app.translate("main", "secret for binding"));
-    parser.addHelpOption();
-    parser.addVersionOption();
-    parser.process(app);
-    QStringList positionalArguments = parser.positionalArguments();
+    engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 
-    if (positionalArguments.length() == 2) {
-        int port = positionalArguments.takeFirst().toInt();
-        QString secret = positionalArguments.takeFirst();
-        QUrl bindingAddress;
-        bindingAddress.setScheme(QStringLiteral("ws"));
-        bindingAddress.setHost(QStringLiteral("localhost"));
-        bindingAddress.setPort(port);
-        bindingAddress.setPath(QStringLiteral("/api"));
-        QUrlQuery query;
-        query.addQueryItem(QStringLiteral("token"), secret);
-        bindingAddress.setQuery(query);
-        context->setContextProperty(QStringLiteral("bindingAddress"), bindingAddress);
-
-        context->setContextProperty("AlbumArt", "");
-        context->setContextProperty("mediaplayer", new Mediaplayer(bindingAddress, context));
-
-        engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
-    }
     return app.exec();
 }

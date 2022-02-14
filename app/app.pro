@@ -1,17 +1,18 @@
+TEMPLATE = app
 TARGET = mediaplayer
-QT = quickcontrols2 websockets
+QT = qml quickcontrols2
+CONFIG += c++11 link_pkgconfig
 
-SOURCES = main.cpp
-
-CONFIG += link_pkgconfig
 PKGCONFIG += qtappfw-mediaplayer
 
-CONFIG(release, debug|release) {
-    QMAKE_POST_LINK = $(STRIP) --strip-unneeded $(TARGET)
-}
+SOURCES = main.cpp
 
 RESOURCES += \
     mediaplayer.qrc \
     images/images.qrc
 
-include(app.pri)
+target.path = /usr/bin
+target.files += $${OUT_PWD}/$${TARGET}
+target.CONFIG = no_check_exist executable
+
+INSTALLS += target
