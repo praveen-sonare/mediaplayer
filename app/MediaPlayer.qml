@@ -46,6 +46,11 @@ ApplicationWindow {
         }
     }
 
+    Component.onCompleted : {
+        // Let the mediaplayer backend know we're ready for metadata events
+        mediaplayer.start()
+    }
+
     Connections {
         target: mediaplayer
 
