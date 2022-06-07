@@ -24,6 +24,7 @@
 #include <QQuickWindow>
 
 #include <mediaplayer.h>
+#include <vehiclesignals.h>
 
 #include <unistd.h>
 
@@ -38,6 +39,8 @@ int main(int argc, char *argv[])
     QQmlContext *context = engine.rootContext();
     context->setContextProperty("AlbumArt", "");
     context->setContextProperty("mediaplayer", new Mediaplayer(context));
+    VehicleSignalsConfig vsConfig("mediaplayer");
+    context->setContextProperty("VehicleSignals", new VehicleSignals(vsConfig));
 
     engine.load(QUrl(QStringLiteral("qrc:/MediaPlayer.qml")));
 
