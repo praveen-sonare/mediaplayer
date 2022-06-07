@@ -49,6 +49,8 @@ ApplicationWindow {
     Component.onCompleted : {
         // Let the mediaplayer backend know we're ready for metadata events
         mediaplayer.start()
+
+        VehicleSignals.connect()
     }
 
     Connections {
@@ -82,6 +84,33 @@ ApplicationWindow {
 
             if ('position' in metadata) {
                 player.position = metadata.position
+            }
+        }
+    }
+
+    Connections {
+        target: VehicleSignals
+
+        onConnected: {
+	    VehicleSignals.authorize()
+        }
+
+        onAuthorized: {
+	    VehicleSignals.subscribe("Vehicle.Cabin.Infotainment.Media.Action")
+	}
+
+        onSignalNotification: {
+            if (path === "Vehicle.Cabin.Infotainment.Media.Action") {
+                if (value == "SkipForward") {
+                    mediaplayer.next()
+                } else if (value == "SkipBackward") {
+                    mediaplayer.previous()
+                } else if (value == "NextSource") {
+                    if (player.av_connected)
+                        mediaplayer.connect()
+                    else
+                        mediaplayer.disconnect()
+                }
             }
         }
     }

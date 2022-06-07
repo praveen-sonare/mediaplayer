@@ -3,7 +3,7 @@ TARGET = mediaplayer
 QT = qml quickcontrols2
 CONFIG += c++11 link_pkgconfig
 
-PKGCONFIG += qtappfw-mediaplayer
+PKGCONFIG += qtappfw-mediaplayer qtappfw-vehicle-signals
 
 SOURCES = main.cpp
 
