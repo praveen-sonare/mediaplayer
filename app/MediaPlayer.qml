@@ -96,21 +96,21 @@ ApplicationWindow {
         }
 
         onAuthorized: {
-	    VehicleSignals.subscribe("Vehicle.Cabin.Infotainment.Media.Action")
+	    VehicleSignals.subscribe("Vehicle.Cabin.SteeringWheel.Switches.Next")
+	    VehicleSignals.subscribe("Vehicle.Cabin.SteeringWheel.Switches.Previous")
+	    VehicleSignals.subscribe("Vehicle.Cabin.SteeringWheel.Switches.Mode")
 	}
 
         onSignalNotification: {
-            if (path === "Vehicle.Cabin.Infotainment.Media.Action") {
-                if (value == "SkipForward") {
-                    mediaplayer.next()
-                } else if (value == "SkipBackward") {
-                    mediaplayer.previous()
-                } else if (value == "NextSource") {
-                    if (player.av_connected)
-                        mediaplayer.connect()
-                    else
-                        mediaplayer.disconnect()
-                }
+            if (path === "Vehicle.Cabin.SteeringWheel.Switches.Next" && value === "true") {
+                mediaplayer.next()
+            } else if (path === "Vehicle.Cabin.SteeringWheel.Switches.Previous" && value === "true") {
+                mediaplayer.previous()
+            } else if (path === "Vehicle.Cabin.SteeringWheel.Switches.Mode" && value === "true") {
+                if (player.av_connected)
+                    mediaplayer.connect()
+                else
+                    mediaplayer.disconnect()
             }
         }
     }
