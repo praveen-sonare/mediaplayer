@@ -140,17 +140,19 @@ ApplicationWindow {
             Layout.fillHeight: true
             Layout.preferredHeight: 1080
             clip: true
+
             Image {
+                anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: sourceSize.height * width / sourceSize.width
-                fillMode: Image.PreserveAspectCrop
+                anchors.bottom: controls.top
+                fillMode: Image.PreserveAspectFit
                 source: AlbumArt
                 visible: player.av_connected === false
             }
 
             Item {
+                id: controls
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
@@ -292,7 +294,7 @@ ApplicationWindow {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: 407
+            Layout.preferredHeight: 480
 
             ListView {
                 anchors.fill: parent
